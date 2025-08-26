@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员面板 - 立信英语</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .debug-info { font-size: 0.8rem; color: #6c757d; }
+        .table-responsive { max-height: 500px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">立信英语</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="si-nian-ji.html">文章</a></li>
+                    <li class="nav-item"><a class="nav-link" href="si-nian-ji.html">四年级</a></li>
+                    
+                    <!-- 登录状态显示 - 添加的部分 -->
+                    <li class="nav-item">
+                        <span id="user-info" class="navbar-text me-2 d-none"></span>
+                        <a href="profile.html" class="btn btn-outline-primary btn-sm me-1 d-none" id="profile-btn">个人中心</a>
+                        <a href="learning-records.html" class="btn btn-outline-info btn-sm me-1 d-none" id="records-btn">学习记录</a>
+                        <a href="admin-vocabulary.html" class="btn btn-outline-warning btn-sm me-1 d-none" id="admin-btn">管理员</a>
+                        <button id="login-btn" class="btn btn-outline-primary btn-sm me-1">登录</button>
+                        <button id="logout-btn" class="btn btn-outline-secondary btn-sm d-none">登出</button>
+                    </li>
+                    <!-- 登录状态显示结束 -->
+                    
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面内容 -->
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-3 mb-4">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5>管理员面板</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action active" onclick="adminVocabulary.switchTab('import')">导入数据</a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="adminVocabulary.switchTab('list')">浏览词汇</a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="adminVocabulary.switchTab('passage-list')">浏览短文</a>
+                        <a href="index.html" class="list-group-item list-group-item-action">← 返回首页</a>
+                    </div>
+                </div>
+
+                <!-- 管理员后台 侧边栏 -->
+                <div class="card mt-3"> <!-- mt-3 添加一些顶部外边距 -->
+                    <div class="card-header">
+                        <h5>管理员后台</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="admin.html" class="list-group-item list-group-item-action">
+                            <i class="bi bi-gear me-2"></i>系统管理
+                        </a>
+                        <!-- 可以在这里添加更多后台管理链接 -->
+                        <!-- <a href="another-admin-page.html" class="list-group-item list-group-item-action">其他管理功能</a> -->
+                    </div>
+                </div>				
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="col-lg-9">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="index.html">首页</a></li>
+                        <li class="breadcrumb-item active">管理员面板</li>
+                    </ol>
+                </nav>
+
+                <h2 class="mb-4">管理员功能</h2>
+
+                <!-- 导入词汇/短文标签页 -->
+                <div id="import-tab" class="tab-content active">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-cloud-upload"></i> 导入词汇</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="importForm">
+                                <div class="mb-3">
+                                    <label for="csvFile" class="form-label">选择CSV文件</label>
+                                    <input class="form-control" type="file" id="csvFile" accept=".csv">
+                                    <div class="form-text debug-info" id="file-debug-info">未选择文件</div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100" id="import-btn">
+                                    <span id="import-btn-text">导入词汇</span>
+                                    <span id="import-btn-loading" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </form>
+                            <div class="mt-3">
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle"></i> 导入说明</h6>
+                                    <ul class="mb-0">
+                                        <li>请上传符合格式的CSV文件</li>
+                                        <li>文件大小限制为5MB</li>
+                                        <li>仅支持.csv格式</li>
+                                        <li><a href="#" onclick="downloadVocabularyTemplate()">点击下载词汇CSV模板</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 新增：导入短文区域 -->
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-file-earmark-text"></i> 导入短文</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="importPassageForm">
+                                <div class="mb-3">
+                                    <label for="passageCsvFile" class="form-label">选择短文CSV文件</label>
+                                    <input class="form-control" type="file" id="passageCsvFile" accept=".csv">
+                                    <div class="form-text debug-info" id="passage-file-debug-info">未选择文件</div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100" id="import-passage-btn">
+                                    <span id="import-passage-btn-text">导入短文</span>
+                                    <span id="import-passage-btn-loading" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </form>
+                            <div class="mt-3">
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle"></i> 导入说明</h6>
+                                    <ul class="mb-0">
+                                        <li>请上传符合格式的短文CSV文件</li>
+                                        <li>文件大小限制为5MB</li>
+                                        <li>仅支持.csv格式</li>
+                                        <li>字段: title, content, grade, category (可选)</li>
+                                        <li><a href="#" onclick="downloadPassageTemplate()">点击下载短文CSV模板</a></li> <!-- 新增 -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 浏览词汇标签页 -->
+                <div id="list-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-list"></i> 浏览词汇</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <select class="form-select" id="search-category">
+                                        <option value="">所有分类</option>
+                                        <option value="school">学校</option>
+                                        <option value="animals">动物</option>
+                                        <option value="daily">日常</option>
+                                        <option value="leisure">休闲</option>
+                                        <option value="environment">环境</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" id="search-difficulty">
+                                        <option value="">所有难度</option>
+                                        <option value="beginner">初级</option>
+                                        <option value="intermediate">中级</option>
+                                        <option value="advanced">高级</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="search-word" placeholder="搜索词汇...">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary mb-3" onclick="adminVocabulary.searchVocabulary()"><i class="bi bi-search"></i> 搜索</button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>英文</th>
+                                            <th>中文</th>
+                                            <th>词性</th>
+                                            <th>难度</th>
+                                            <th>分类</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vocabulary-table-body">
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <nav aria-label="词汇列表分页">
+                                <ul class="pagination justify-content-center" id="pagination">
+                                    <!-- 动态生成分页 -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：浏览短文标签页 -->
+                <div id="passage-list-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-file-earmark-text"></i> 浏览短文</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <select class="form-select" id="search-passage-grade">
+                                        <option value="">所有年级</option>
+                                        <!-- <option value="grade1">一年级</option> -->
+                                        <!-- <option value="grade2">二年级</option> -->
+                                        <!-- <option value="grade3">三年级</option> -->
+                                        <option value="grade4">四年级</option>
+                                        <option value="grade5">五年级</option>
+                                        <option value="grade6">六年级</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="search-passage-title" placeholder="搜索短文标题或内容...">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary mb-3" onclick="adminVocabulary.searchPassages()"><i class="bi bi-search"></i> 搜索短文</button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>标题</th>
+                                            <th>年级</th>
+                                            <th>分类</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="passage-table-body">
+                                        <tr>
+                                            <td colspan="5" class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <nav aria-label="短文列表分页">
+                                <ul class="pagination justify-content-center" id="passage-pagination">
+                                    <!-- 动态生成分页 -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2024 立信英语. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">用心打造高效英语学习平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 管理员词汇管理系统 (扩展版)
+        class AdminVocabularySystem {
+            constructor() {
+                this.currentPage = 1;
+                this.pageSize = 10;
+                this.totalPages = 0;
+                this.vocabularyData = [];
+                // 新增：短文相关属性
+                this.currentPassagePage = 1;
+                this.passageData = [];
+                this.totalPassagePages = 0;
+            }
+
+            // 检查管理员权限
+            async checkAdminAccess() {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                try {
+                    const response = await fetch('http://localhost:3000/api/user', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        const user = result.user;
+                        // 假设管理员邮箱列表在前端维护或通过后端API获取
+                        const adminEmails = ['admin@example.com', 'admin@liuxinenglish.com']; // 这应该从后端获取或配置
+                        if (adminEmails.includes(user.email)) {
+                            this.updateUIForUser(user);
+                            return true;
+                        } else {
+                            alert('您没有管理员权限。');
+                            window.location.href = 'index.html';
+                            return false;
+                        }
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('检查管理员权限失败:', error);
+                    localStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+            }
+
+            // 检查管理员权限 (修改后)
+            //async checkAdminAccess() {
+            //    const token = localStorage.getItem('token');
+            //    // const userInfo = document.getElementById('user-info'); // 如果需要更新UI，可以获取
+            //    // const profileBtn = document.getElementById('profile-btn');
+            //    // const recordsBtn = document.getElementById('records-btn');
+            //    // const adminBtn = document.getElementById('admin-btn');
+            //    const loginBtn = document.getElementById('login-btn');
+            //    const logoutBtn = document.getElementById('logout-btn');
+			//
+            //    if (!token) {
+            //        console.warn("checkAdminAccess: 未找到 token，重定向到登录页。");
+            //        loginBtn?.classList.remove('d-none');
+            //        // 可选：自动跳转
+            //        // window.location.href = 'login.html';
+            //        return false;
+            //    }
+			//
+            //    try {
+            //        const response = await fetch(`${this.apiBaseUrl}/user`, { // 使用 this.apiBaseUrl
+            //            method: 'GET',
+            //            headers: {
+            //                'Authorization': `Bearer ${token}`,
+            //                'Content-Type': 'application/json'
+            //            }
+            //        });
+			//
+            //        if (!response.ok) {
+            //            // 如果 /api/user 请求本身失败（如 401, 403），也视为权限问题
+            //            const errorData = await response.json().catch(() => ({}));
+            //            console.error('获取用户信息失败 (HTTP Error):', response.status, errorData.error);
+            //            throw new Error(errorData.error || `获取用户信息失败: ${response.status}`);
+            //        }
+			//
+            //        const result = await response.json();
+            //        if (result.success) {
+            //            const user = result.user;
+            //            console.log("用户信息获取成功:", user.email);
+            //            // 不再在前端检查邮箱列表，直接认为能获取到信息就是有效的（至少是已登录用户）
+            //            // 但为了 UI 完整性，可以更新用户信息显示
+            //            this.updateUIForUser(user); // 确保这个方法存在并正确实现
+            //            // 真正的管理员权限检查留给后端 API 调用时进行
+            //            return true;
+            //        } else {
+            //            throw new Error(result.error);
+            //        }
+            //    } catch (error) {
+            //        console.error('检查管理员权限失败 (Exception):', error);
+            //        // 清除无效的 token
+            //        localStorage.removeItem('token');
+            //        loginBtn?.classList.remove('d-none');
+            //        logoutBtn?.classList.add('d-none');
+            //        // 可选：显示错误消息
+            //        // this.showMessage('权限检查失败: ' + error.message, 'danger');
+            //        // 可选：自动跳转
+            //        // window.location.href = 'login.html';
+            //        return false;
+            //    }
+            //}
+			
+            // 更新UI用户信息
+            updateUIForUser(user) {
+                const userInfo = document.getElementById('user-info');
+                const profileBtn = document.getElementById('profile-btn');
+                const recordsBtn = document.getElementById('records-btn');
+                const adminBtn = document.getElementById('admin-btn');
+                const loginBtn = document.getElementById('login-btn');
+                const logoutBtn = document.getElementById('logout-btn');
+			
+                if (user) {
+                    userInfo.textContent = `欢迎, ${user.name || user.email}`;
+                    userInfo.classList.remove('d-none');
+                    profileBtn.classList.remove('d-none');
+                    recordsBtn.classList.remove('d-none');
+                    adminBtn.classList.remove('d-none');
+                    loginBtn.classList.add('d-none');
+                    logoutBtn.classList.remove('d-none');
+                } else {
+                    userInfo.classList.add('d-none');
+                    profileBtn.classList.add('d-none');
+                    recordsBtn.classList.add('d-none');
+                    adminBtn.classList.add('d-none');
+                    loginBtn.classList.remove('d-none');
+                    logoutBtn.classList.add('d-none');
+                }
+            }
+
+            //// 更新UI用户信息 (确保此方法存在)
+            //updateUIForUser(user) {
+            //    const userInfo = document.getElementById('user-info');
+            //    const profileBtn = document.getElementById('profile-btn');
+            //    const recordsBtn = document.getElementById('records-btn');
+            //    const adminBtn = document.getElementById('admin-btn');
+            //    const loginBtn = document.getElementById('login-btn');
+            //    const logoutBtn = document.getElementById('logout-btn');
+			//
+            //    if (userInfo && user) {
+            //        userInfo.textContent = `欢迎, ${user.name || user.email}`;
+            //        userInfo.classList.remove('d-none');
+            //    }
+            //    if (profileBtn) profileBtn.classList.remove('d-none');
+            //    if (recordsBtn) recordsBtn.classList.remove('d-none');
+            //    if (adminBtn) adminBtn.classList.remove('d-none'); // 管理员按钮也显示
+            //    if (loginBtn) loginBtn.classList.add('d-none');
+            //    if (logoutBtn) logoutBtn.classList.remove('d-none');
+            //}
+			
+            // 切换标签页
+            switchTab(tabName) {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+                
+                document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active'));
+                event.currentTarget.classList.add('active');
+
+                if (tabName === 'list') {
+                    this.loadVocabularyList(1);
+                } else if (tabName === 'passage-list') { // 新增
+                    this.loadPassageList(1); // 新增
+                }
+            }
+
+            // 显示消息
+            showMessage(text, type, context = 'import') {
+                let alertContainerId;
+                if (context === 'import') {
+                    alertContainerId = 'import-tab';
+                } else if (context === 'export') {
+                    alertContainerId = 'export-tab';
+                } else {
+                    alertContainerId = `${context}-tab`;
+                }
+
+                const alertContainer = document.querySelector(`#${alertContainerId} .card-body`);
+                if (alertContainer) {
+                    // 移除已存在的消息
+                    const existingAlert = alertContainer.querySelector('.alert');
+                    if (existingAlert) {
+                        existingAlert.remove();
+                    }
+
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                    alertDiv.role = 'alert';
+                    alertDiv.innerHTML = `
+                        ${text}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    alertContainer.insertBefore(alertDiv, alertContainer.firstChild);
+                }
+            }
+
+            // 显示加载状态
+            showLoading(isLoading, context = 'import') {
+                let btnId, btnTextId, btnLoadingId;
+                if (context === 'import') {
+                    btnId = 'import-btn';
+                    btnTextId = 'import-btn-text';
+                    btnLoadingId = 'import-btn-loading';
+                } else if (context === 'import-passage') { // 新增
+                    btnId = 'import-passage-btn';
+                    btnTextId = 'import-passage-btn-text';
+                    btnLoadingId = 'import-passage-btn-loading';
+                }
+
+                const btn = document.getElementById(btnId);
+                const btnText = document.getElementById(btnTextId);
+                const btnLoading = document.getElementById(btnLoadingId);
+
+                if (isLoading) {
+                    btn.disabled = true;
+                    btnText.textContent = context === 'import' ? '导入中...' : '导入中...';
+                    btnLoading.classList.remove('d-none');
+                } else {
+                    btn.disabled = false;
+                    btnText.textContent = context === 'import' ? '导入词汇' : '导入短文';
+                    btnLoading.classList.add('d-none');
+                }
+            }
+
+            // 更新文件调试信息
+            updateDebugInfo(info, size, context = 'vocabulary') {
+                let debugInfoId;
+                if (context === 'vocabulary') {
+                    debugInfoId = 'file-debug-info';
+                } else if (context === 'passage') { // 新增
+                    debugInfoId = 'passage-file-debug-info';
+                }
+                document.getElementById(debugInfoId).textContent = `${info} (${size})`;
+            }
+
+            // --- 词汇相关函数 ---
+            // 导入词汇
+            async importVocabulary() {
+                const fileInput = document.getElementById('csvFile');
+                const file = fileInput.files[0];
+                if (!file) {
+                    this.showMessage('请选择CSV文件', 'danger', 'import');
+                    return;
+                }
+                if (!file.name.endsWith('.csv')) {
+                    this.showMessage('请选择CSV格式的文件', 'danger', 'import');
+                    return;
+                }
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    this.showMessage('请先登录获取访问权限', 'danger', 'import');
+                    return;
+                }
+
+                this.showLoading(true, 'import');
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/core-vocabulary/import', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showMessage(`词汇导入成功！成功导入 ${result.importedCount} 个词汇。`, 'success', 'import');
+                        document.getElementById('importForm').reset();
+                        this.updateDebugInfo('未选择', '0 KB');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('导入词汇失败:', error);
+                    this.showMessage(`导入失败: ${error.message}`, 'danger', 'import');
+                } finally {
+                    this.showLoading(false, 'import');
+                }
+            }
+
+            // 加载词汇列表
+            async loadVocabularyList(page = 1) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                this.currentPage = page;
+                const tableBody = document.getElementById('vocabulary-table-body');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">加载中...</span></div></td></tr>';
+
+                try {
+                    const response = await fetch(`http://localhost:3000/api/core-vocabulary/list?page=${page}&limit=${this.pageSize}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.vocabularyData = result.vocabulary;
+                        this.totalPages = result.pagination.totalPages;
+                        this.renderVocabularyTable();
+                        this.renderPagination();
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">加载失败: ${error.message}</td></tr>`;
+                }
+            }
+
+            // 渲染词汇表格
+            renderVocabularyTable() {
+                const tableBody = document.getElementById('vocabulary-table-body');
+                if (this.vocabularyData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">暂无词汇数据</td></tr>';
+                    return;
+                }
+                let html = '';
+                this.vocabularyData.forEach(vocab => {
+                    html += `
+                    <tr>
+                        <td>${vocab.word}</td>
+                        <td>${vocab.translation}</td>
+                        <td>${vocab.partOfSpeech}</td>
+                        <td>${vocab.difficulty}</td>
+                        <td>${vocab.category}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="adminVocabulary.editVocabulary('${vocab._id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="adminVocabulary.deleteVocabulary('${vocab._id}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                tableBody.innerHTML = html;
+            }
+
+            // 渲染分页 (词汇)
+            renderPagination() {
+                const pagination = document.getElementById('pagination');
+                if (this.totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+                let html = '';
+                html += `<li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="adminVocabulary.loadVocabularyList(${this.currentPage - 1})">上一页</a></li>`;
+                for (let i = 1; i <= this.totalPages; i++) {
+                    html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="adminVocabulary.loadVocabularyList(${i})">${i}</a></li>`;
+                }
+                html += `<li class="page-item ${this.currentPage === this.totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="adminVocabulary.loadVocabularyList(${this.currentPage + 1})">下一页</a></li>`;
+                pagination.innerHTML = html;
+            }
+
+            // 编辑词汇
+            editVocabulary(id) {
+                alert(`编辑词汇功能将在后续版本中实现！词汇ID: ${id}`);
+            }
+
+            // 删除词汇
+            async deleteVocabulary(id) {
+                if (!confirm('确定要删除这个词汇吗？此操作不可恢复！')) {
+                    return;
+                }
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                try {
+                    const response = await fetch(`http://localhost:3000/api/core-vocabulary/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showMessage('词汇删除成功', 'success', 'list');
+                        await this.loadVocabularyList(this.currentPage);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('删除词汇失败:', error);
+                    this.showMessage(`删除失败: ${error.message}`, 'danger', 'list');
+                }
+            }
+
+            // 搜索词汇
+            async searchVocabulary() {
+                const searchWord = document.getElementById('search-word').value.trim();
+                const category = document.getElementById('search-category').value;
+                const difficulty = document.getElementById('search-difficulty').value;
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const tableBody = document.getElementById('vocabulary-table-body');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">搜索中...</span></div></td></tr>';
+
+                try {
+                    let url = `http://localhost:3000/api/core-vocabulary/list?page=1&limit=${this.pageSize}`;
+                    if (searchWord) url += `&search=${encodeURIComponent(searchWord)}`;
+                    if (category) url += `&category=${encodeURIComponent(category)}`;
+                    if (difficulty) url += `&difficulty=${encodeURIComponent(difficulty)}`;
+
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.vocabularyData = result.vocabulary;
+                        this.totalPages = result.pagination.totalPages;
+                        this.renderVocabularyTable();
+                        this.renderPagination();
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">搜索失败: ${error.message}</td></tr>`;
+                }
+            }
+
+            // --- 新增：短文相关函数 ---
+
+            // 导入短文
+            async importPassage() {
+                const fileInput = document.getElementById('passageCsvFile');
+                const file = fileInput.files[0];
+                if (!file) {
+                    this.showMessage('请选择CSV文件', 'danger', 'import-passage');
+                    return;
+                }
+                if (!file.name.endsWith('.csv')) {
+                    this.showMessage('请选择CSV格式的文件', 'danger', 'import-passage');
+                    return;
+                }
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    this.showMessage('请先登录获取访问权限', 'danger', 'import-passage');
+                    return;
+                }
+
+                this.showLoading(true, 'import-passage');
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    // 调用新的短文导入API端点
+                    const response = await fetch('http://localhost:3000/api/passages/import', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                            // 注意：使用 FormData 时不要设置 Content-Type，浏览器会自动设置
+                        },
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showMessage(`短文导入成功！成功导入 ${result.importedCount} 篇短文。`, 'success', 'import-passage');
+                        document.getElementById('importPassageForm').reset();
+                        this.updateDebugInfo('未选择', '0 KB', 'passage');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('导入短文失败:', error);
+                    this.showMessage(`导入失败: ${error.message}`, 'danger', 'import-passage');
+                } finally {
+                    this.showLoading(false, 'import-passage');
+                }
+            }
+
+            // 加载短文列表
+            //async loadPassageList(page = 1) {
+            //    const token = localStorage.getItem('token');
+            //    if (!token) {
+            //        window.location.href = 'login.html';
+            //        return;
+            //    }
+            //    this.currentPassagePage = page;
+            //    const tableBody = document.getElementById('passage-table-body');
+            //    tableBody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">加载中...</span></div></td></tr>';
+			//
+            //    try {
+            //        // 调用新的短文列表API端点
+            //        const response = await fetch(`http://localhost:3000/api/passages/list?page=${page}&limit=${this.pageSize}`, {
+            //            method: 'GET',
+            //            headers: {
+            //                'Authorization': `Bearer ${token}`,
+            //                'Content-Type': 'application/json'
+            //            }
+            //        });
+            //        const result = await response.json();
+            //        if (result.success) {
+            //            this.passageData = result.passages;
+            //            this.totalPassagePages = result.pagination.totalPages;
+            //            this.renderPassageTable();
+            //            this.renderPassagePagination();
+            //        } else {
+            //            throw new Error(result.error);
+            //        }
+            //    } catch (error) {
+            //        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">加载失败: ${error.message}</td></tr>`;
+            //    }
+            //}
+
+            // 加载短文列表
+            async loadPassageList(page = 1) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                this.currentPassagePage = page;
+                const tableBody = document.getElementById('passage-table-body');
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">加载中...</span></div></td></tr>';
+
+                try {
+                    // 调用新的短文列表API端点
+                    const response = await fetch(`http://localhost:3000/api/passages/list?page=${page}&limit=${this.pageSize}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    // --- 关键修改：检查响应状态和内容类型 ---
+                    const contentType = response.headers.get('content-type');
+                    if (!response.ok) {
+                        // HTTP 错误 (4xx, 5xx)
+                        let errorMsg = `HTTP错误 ${response.status}`;
+                        if (contentType && contentType.includes('application/json')) {
+                            // 如果是 JSON 错误响应，尝试解析
+                            try {
+                                const errorResult = await response.json();
+                                errorMsg += `: ${errorResult.error || errorResult.message || '未知错误'}`;
+                            } catch (e) {
+                                // 解析 JSON 失败
+                                errorMsg += ` (无法解析错误详情)`;
+                            }
+                        } else {
+                            // 如果不是 JSON，可能是 HTML 错误页
+                            const errorText = await response.text();
+                            console.error(`收到非JSON错误响应 (HTTP ${response.status}):`, errorText.substring(0, 200) + (errorText.length > 200 ? '...' : ''));
+                            errorMsg += ` (服务器可能返回了错误页面)`;
+                        }
+                        throw new Error(errorMsg);
+                    }
+
+                    if (!contentType || !contentType.includes('application/json')) {
+                        // 响应不是 JSON 格式，很可能是重定向到了登录页或错误页
+                        const textResponse = await response.text();
+                        console.error('收到非JSON响应:', textResponse.substring(0, 200) + (textResponse.length > 200 ? '...' : ''));
+                        // 检查是否是 HTML 登录页
+                        if (textResponse.trim().startsWith('<')) {
+                             // 可能是未认证导致的重定向到登录页
+                             throw new Error('认证失败或会话过期，请尝试重新登录。');
+                        }
+                        throw new Error('服务器响应格式错误，期望JSON。');
+                    }
+                    // --- 修改结束 ---
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.passageData = result.passages;
+                        this.totalPassagePages = result.pagination.totalPages;
+                        this.renderPassageTable();
+                        this.renderPassagePagination();
+                    } else {
+                        throw new Error(result.error || 'API返回失败状态');
+                    }
+                } catch (error) {
+                    // --- 关键修改：改进错误显示 ---
+                    let displayMessage = error.message;
+                    // 特别处理网络连接错误
+                    if (error instanceof TypeError && error.message.includes('fetch')) {
+                        displayMessage = '网络连接失败，请检查服务器是否运行以及网络连接。';
+                        console.error('网络连接错误详情:', error);
+                    } else {
+                        console.error('加载短文列表失败:', error);
+                    }
+                    // --- 修改结束 ---
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">加载失败: ${displayMessage}</td></tr>`;
+                }
+            }
+			
+            // 渲染短文表格
+            renderPassageTable() {
+                const tableBody = document.getElementById('passage-table-body');
+                if (this.passageData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">暂无短文数据</td></tr>';
+                    return;
+                }
+                let html = '';
+                this.passageData.forEach(passage => {
+                    const createdAt = new Date(passage.createdAt).toLocaleString('zh-CN');
+                    html += `
+                    <tr>
+                        <td>${passage.title}</td>
+                        <td>${passage.grade}</td>
+                        <td>${passage.category || '-'}</td>
+                        <td>${createdAt}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="adminVocabulary.viewPassage('${passage._id}')"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="adminVocabulary.deletePassage('${passage._id}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                tableBody.innerHTML = html;
+            }
+
+            // 渲染分页 (短文)
+            renderPassagePagination() {
+                const pagination = document.getElementById('passage-pagination');
+                if (this.totalPassagePages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+                let html = '';
+                html += `<li class="page-item ${this.currentPassagePage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="adminVocabulary.loadPassageList(${this.currentPassagePage - 1})">上一页</a></li>`;
+                for (let i = 1; i <= this.totalPassagePages; i++) {
+                    html += `<li class="page-item ${i === this.currentPassagePage ? 'active' : ''}"><a class="page-link" href="#" onclick="adminVocabulary.loadPassageList(${i})">${i}</a></li>`;
+                }
+                html += `<li class="page-item ${this.currentPassagePage === this.totalPassagePages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="adminVocabulary.loadPassageList(${this.currentPassagePage + 1})">下一页</a></li>`;
+                pagination.innerHTML = html;
+            }
+
+            // 查看短文 (简单弹窗)
+            viewPassage(id) {
+                const passage = this.passageData.find(p => p._id === id);
+                if (passage) {
+                    // 使用模态框或简单的 alert 显示内容
+                    const contentPreview = passage.content.length > 200 ? passage.content.substring(0, 200) + '...' : passage.content;
+                    alert(`标题: ${passage.title}\n年级: ${passage.grade}\n分类: ${passage.category || '-'}\n\n内容预览:\n${contentPreview}\n\n(完整内容请在数据库或后端查看)`);
+                }
+            }
+
+            // 删除短文
+            async deletePassage(id) {
+                if (!confirm('确定要删除这篇短文吗？此操作不可恢复！')) {
+                    return;
+                }
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                try {
+                    // 调用新的短文删除API端点 (假设为 DELETE /api/passages/:id)
+                    const response = await fetch(`http://localhost:3000/api/passages/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showMessage('短文删除成功', 'success', 'passage-list');
+                        await this.loadPassageList(this.currentPassagePage);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('删除短文失败:', error);
+                    this.showMessage(`删除失败: ${error.message}`, 'danger', 'passage-list');
+                }
+            }
+
+            // 搜索短文
+            async searchPassages() {
+                const searchTitle = document.getElementById('search-passage-title').value.trim();
+                const grade = document.getElementById('search-passage-grade').value;
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const tableBody = document.getElementById('passage-table-body');
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">搜索中...</span></div></td></tr>';
+
+                try {
+                    let url = `http://localhost:3000/api/passages/list?page=1&limit=${this.pageSize}`;
+                    const params = [];
+                    if (searchTitle) params.push(`search=${encodeURIComponent(searchTitle)}`);
+                    if (grade) params.push(`grade=${encodeURIComponent(grade)}`);
+                    if (params.length > 0) url += '&' + params.join('&');
+
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.passageData = result.passages;
+                        this.totalPassagePages = result.pagination.totalPages;
+                        this.renderPassageTable();
+                        this.renderPassagePagination();
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">搜索失败: ${error.message}</td></tr>`;
+                }
+            }
+        }
+
+        // 创建全局管理员词汇系统实例
+        const adminVocabulary = new AdminVocabularySystem();
+
+        // 文件选择监听 (词汇)
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                adminVocabulary.updateDebugInfo(file.name, (file.size / 1024).toFixed(2) + ' KB');
+            } else {
+                adminVocabulary.updateDebugInfo('未选择', '0 KB');
+            }
+        });
+
+        // 文件选择监听 (短文) - 新增
+        document.getElementById('passageCsvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                adminVocabulary.updateDebugInfo(file.name, (file.size / 1024).toFixed(2) + ' KB', 'passage');
+            } else {
+                adminVocabulary.updateDebugInfo('未选择', '0 KB', 'passage');
+            }
+        });
+
+        // 标签页导航
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.list-group-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabName = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    adminVocabulary.switchTab(tabName);
+                });
+            });
+        });
+
+        // 导入表单提交 (词汇)
+        document.getElementById('importForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await adminVocabulary.importVocabulary();
+        });
+
+        // 导入表单提交 (短文) - 新增
+        document.getElementById('importPassageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await adminVocabulary.importPassage();
+        });
+
+        // 搜索表单提交 (词汇)
+        document.getElementById('search-word').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                adminVocabulary.searchVocabulary();
+            }
+        });
+
+        // 登出按钮事件
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        });
+
+        // 登录按钮事件
+        document.getElementById('login-btn').addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+
+        // 下载词汇模板
+        function downloadVocabularyTemplate() {
+            const csvContent = `word,translation,partOfSpeech,pronunciation,example,exampleTranslation,difficulty,category,tags
+welcome,欢迎,感叹词,/ˈwelkəm/,"Welcome to our school!","欢迎来到我们学校！",beginner,school,"高频词汇,基础问候"
+introduce,介绍,动词,/ˌɪntrəˈduːs/,"Let me introduce myself.","让我介绍一下我自己。",beginner,school,"自我介绍"
+geography,地理,名词,/dʒiˈɒɡrəfi/,I like geography very much.,"我非常喜欢地理。",intermediate,school,"学科词汇"
+biology,生物,名词,/baɪˈɒlədʒi/,Biology is my favorite subject.,"生物是我最喜欢的科目。",intermediate,school,"学科词汇"
+exchange,交换,动词,/ɪkˈstʃeɪndʒ/,We can exchange ideas.,"我们可以交流想法。",intermediate,daily,"交流词汇"
+similar,相似的,形容词,/ˈsɪmələ(r)/,Our opinions are similar.,"我们的观点很相似。",intermediate,daily,"描述词汇"
+difference,区别,名词,/ˈdɪfərəns/,What's the difference between them?,"它们之间有什么区别？",intermediate,daily,"描述词汇"
+protect,保护,动词,/prəˈtekt/,We should protect our environment.,"我们应该保护我们的环境。",intermediate,environment,"环保词汇"
+technology,科技,名词,/tekˈnɒlədʒi/,Modern technology makes life easier.,"现代科技让生活更便捷。",advanced,daily,"科技词汇"
+development,发展，开发,名词,/dʒɪˈveləpmənt/,China has made great development.,"中国取得了巨大的发展。",advanced,daily,"社会发展"
+improve,改善，提高,动词,/ɪmˈpruːv/,You need to improve your English.,"你需要提高你的英语。",intermediate,school,"学习词汇"`;
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'vocabulary_template.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 新增：下载短文模板
+        function downloadPassageTemplate() {
+            const csvContent = `title,content,grade,category
+"My School Day","I get up at seven o'clock. I have breakfast at seven thirty. I go to school at eight o'clock. I have four classes in the morning. I have lunch at twelve o'clock. I have two classes in the afternoon. I go home at four o'clock. I do my homework after dinner. I go to bed at nine o'clock. This is my busy but happy school day.",grade4,school
+"Animals in the Zoo","Welcome to the city zoo! There are many animals here. Look at the big elephant. It has a long nose and two big ears. The monkey is clever. It likes bananas and climbs trees. The panda is from China. It's black and white and very cute. The lion is strong. It has sharp teeth and a big mane. We should protect animals because they are our friends.",grade4,animals`;
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'passage_template.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 检查管理员权限
+            const isAdmin = await adminVocabulary.checkAdminAccess();
+            if (!isAdmin) {
+                return;
+            }
+            // 默认加载词汇列表
+            await adminVocabulary.loadVocabularyList(1);
+        });
+    </script>
+</body>
+</html>

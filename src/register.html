@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - 立信英语</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">立信英语</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="articles.html">文章</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 注册表单 -->
+    <div class="container mt-5 pt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h3 class="text-center mb-4">用户注册</h3>
+                        
+                        <div id="message" class="alert d-none" role="alert"></div>
+                        
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">姓名</label>
+                                <input type="text" class="form-control" id="name" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">邮箱地址</label>
+                                <input type="email" class="form-control" id="email" required>
+                                <div class="form-text">我们将向此邮箱发送确认信息</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">密码</label>
+                                <input type="password" class="form-control" id="password" required minlength="6">
+                                <div class="form-text">密码至少6个字符</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">确认密码</label>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="agreement" required>
+                                <label class="form-check-label" for="agreement">
+                                    我同意<a href="#" class="text-decoration-none">用户协议</a>和<a href="#" class="text-decoration-none">隐私政策</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100" id="registerBtn">
+                                <span id="btnText">注册</span>
+                                <span id="loadingSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <p class="mb-0">已有账户？<a href="login.html" class="text-decoration-none">立即登录</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 立信英语. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">用心打造高效英语学习平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // 注册表单处理
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // 显示加载状态
+            const registerBtn = document.getElementById('registerBtn');
+            const btnText = document.getElementById('btnText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const messageDiv = document.getElementById('message');
+            
+            registerBtn.disabled = true;
+            btnText.classList.add('d-none');
+            loadingSpinner.classList.remove('d-none');
+            messageDiv.classList.add('d-none');
+            
+            // 验证密码
+            if (password !== confirmPassword) {
+                showMessage('两次输入的密码不一致', 'danger');
+                resetButton();
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('密码至少需要6个字符', 'danger');
+                resetButton();
+                return;
+            }
+            
+            try {
+                // 调用后端API注册用户
+                const result = await apiService.register(email, password, name);
+                showMessage('注册成功！即将跳转到登录页面...', 'success');
+                
+                // 2秒后跳转到登录页面
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                
+            } catch (error) {
+                showMessage(error.message, 'danger');
+                resetButton();
+            }
+            
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.className = `alert alert-${type} d-block`;
+            }
+            
+            function resetButton() {
+                registerBtn.disabled = false;
+                btnText.classList.remove('d-none');
+                loadingSpinner.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

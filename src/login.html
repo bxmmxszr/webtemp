@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - 立信英语</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        .auth-modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .auth-modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 0.375rem;
+        }
+        .auth-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .auth-close:hover,
+        .auth-close:focus {
+            color: black;
+            text-decoration: none;
+        }
+        .loading {
+            display: none;
+        }
+        .form-text {
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">立信英语</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="articles.html">文章</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 登录表单 -->
+    <div class="container mt-5 pt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h3 class="text-center mb-4">用户登录</h3>
+                        
+                        <div id="message" class="alert d-none" role="alert"></div>
+                        
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">邮箱地址</label>
+                                <input type="email" class="form-control" id="email" value="admin@example.com" placeholder="请输入邮箱地址" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">密码</label>
+                                <input type="password" class="form-control" id="password" value="admin123" placeholder="请输入密码" required>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">记住我</label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+                                <span id="btnText">登录</span>
+                                <span id="loadingSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <p class="mb-0">还没有账户？<a href="register.html" class="text-decoration-none">立即注册</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 立信英语. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">用心打造高效英语学习平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 登录表单处理
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // 显示加载状态
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const messageDiv = document.getElementById('message');
+            
+            loginBtn.disabled = true;
+            btnText.classList.add('d-none');
+            loadingSpinner.classList.remove('d-none');
+            messageDiv.classList.add('d-none');
+            
+            try {
+                console.log('尝试登录:', email); // 调试信息
+                
+                // 调用后端API登录用户
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                console.log('登录响应:', result); // 调试信息
+                
+                if (result.success) {
+                    // 保存token和用户信息到localStorage
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('lixin_user', JSON.stringify(result.user));
+                    
+                    showMessage('登录成功！即将跳转...', 'success');
+                    
+                    // 1.5秒后跳转到首页
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                    
+                } else {
+                    showMessage(result.error || '登录失败', 'danger');
+                    resetButton();
+                }
+            } catch (error) {
+                console.error('登录错误:', error); // 调试信息
+                showMessage('登录错误：' + error.message, 'danger');
+                resetButton();
+            }
+            
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.className = `alert alert-${type} d-block`;
+            }
+            
+            function resetButton() {
+                loginBtn.disabled = false;
+                btnText.classList.remove('d-none');
+                loadingSpinner.classList.add('d-none');
+            }
+        });
+
+        // 回车登录
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('登录页面加载完成'); // 调试信息
+        });
+    </script>
+</body>
+</html>

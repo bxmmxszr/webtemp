@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九年级英语 - 您的公司名称</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="\css\style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">您的Logo</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html#home">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="articles.html">文章</a></li>
+                    <li class="nav-item"><a class="nav-link" href="jiu-nian-ji.html">九年级</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面内容 -->
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>初中英语索引</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="qi-nian-ji.html" class="list-group-item list-group-item-action">
+                            七年级
+                        </a>
+                        <a href="ba-nian-ji.html" class="list-group-item list-group-item-action">
+                            八年级
+                        </a>
+                        <a href="jiu-nian-ji.html" class="list-group-item list-group-item-action active">
+                            九年级
+                        </a>
+                        <a href="articles.html" class="list-group-item list-group-item-action">
+                            ← 返回总目录
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容 -->
+            <div class="col-lg-9">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="index.html">首页</a></li>
+                        <li class="breadcrumb-item"><a href="articles.html">文章</a></li>
+                        <li class="breadcrumb-item active">九年级</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>九年级英语学习</h2>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            排序方式
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">最新发布</a></li>
+                            <li><a class="dropdown-item" href="#">最受欢迎</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 方法介绍 (与参考网页一致) -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">英语学习方法介绍</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>1. 学习英语常见问题</h5>
+                        <ul>
+                            <li><strong>听不懂</strong> : 很多英语老师默认孩子学过中文语法，直接讲课。</li>
+                            <li><strong>记不住</strong> : 单词、语法太多，没时间复习。</li>
+                            <li><strong>没意思</strong> : 平时用不到，考试抱佛脚。</li>
+                        </ul>
+
+                        <h5>2. 立信英语特训的学习逻辑</h5>
+                        <ul>
+                            <li><strong>时间短</strong> : 每天半小时，让改变悄然发生。</li>
+                            <li><strong>方法正确</strong> : 不再把英语拆分成单词和语法，而是综合学习，扩大知识面，更贴近新中考高考。</li>
+                            <li><strong>项目制学习</strong> : 通过每天翻译一篇文章，让单词和语法自然融入，不死记硬背，文章素材多样提高知识面。</li>
+                            <li><strong>工具便捷</strong> : 提供翻译、语音识别等工具，方便学习。</li>
+                            <li><strong>进步可见</strong> : 可以看到自己学习报告的前后对比，成就感强。</li>
+                        </ul>
+
+                        <h5>3. 训练原理</h5>
+                        <ul>
+                            <li>沉浸式学习法</li>
+                            <li>间隔重复记忆法</li>
+                            <li>输出驱动学习法</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 九年级学习内容 -->
+                <h4 class="mb-4">九年级英语学习内容</h4>
+                <div class="row" id="content-container">
+                    <!-- 内容1 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">语法</span>
+                                    <small class="text-muted">综合</small>
+                                </div>
+                                <h5 class="card-title">语法综合复习</h5>
+                                <p class="card-text">系统复习初中阶段所有核心语法点，查漏补缺，构建完整的语法知识体系，为中考冲刺做好准备。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 内容2 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-success">词汇</span>
+                                    <small class="text-muted">冲刺</small>
+                                </div>
+                                <h5 class="card-title">中考词汇精讲</h5>
+                                <p class="card-text">聚焦中考高频词汇和短语，进行深度学习和精准记忆，确保在考试中能够熟练运用。</p>
+                                <!-- 修改: 指向新创建的九年级核心词汇页面 -->
+                                <a href="core-vocabulary-9nianji.html" class="btn btn-success">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 内容3 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-info">阅读</span>
+                                    <small class="text-muted">强化</small>
+                                </div>
+                                <h5 class="card-title">阅读理解强化</h5>
+                                <p class="card-text">进行高难度、贴近中考的阅读训练，全面提升信息提取、逻辑推理和主旨概括等核心阅读能力。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 内容4 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-warning">写作</span>
+                                    <small class="text-muted">冲刺</small>
+                                </div>
+                                <h5 class="card-title">中考写作冲刺</h5>
+                                <p class="card-text">学习中考各类作文题型的写作技巧和策略，进行针对性练习，提升写作表达和逻辑组织能力。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习特色 -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5>九年级英语学习特色</h5>
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">🏁</span>
+                                </div>
+                                <h6>中考冲刺</h6>
+                                <p class="small">目标明确</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">🧩</span>
+                                </div>
+                                <h6>知识整合</h6>
+                                <p class="small">系统梳理</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">🎯</span>
+                                </div>
+                                <h6>精准提升</h6>
+                                <p class="small">查漏补缺</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">💪</span>
+                                </div>
+                                <h6>信心建立</h6>
+                                <p class="small">迎接挑战</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习建议 -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5>九年级英语学习建议</h5>
+                        <p>针对九年级学生的英语学习建议：</p>
+                        <ol>
+                            <li><strong>制定冲刺计划</strong> : 根据自身情况，制定详细的中考英语复习计划，明确各阶段的学习目标。</li>
+                            <li><strong>系统复习巩固</strong> : 全面复习初中三年所学的词汇、语法等基础知识，确保没有遗漏。</li>
+                            <li><strong>专项强化训练</strong> : 针对听力、阅读、写作等薄弱环节进行专项强化练习，提升应试能力。</li>
+                            <li><strong>模拟实战演练</strong> : 定期进行中考模拟测试，熟悉考试流程和时间分配，锻炼应试心态。</li>
+                            <li><strong>运用高效方法</strong> : 坚持使用立信英语特训的学习逻辑，如每天进行中考题材的短文翻译，将知识转化为实战能力。</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 您的公司名称. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">网站制作：您的公司</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

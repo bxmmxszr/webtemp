@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习记录 - 立信英语</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">立信英语</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html#home">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="si-nian-ji.html">文章</a></li>
+                    <li class="nav-item">
+                        <span id="user-info" class="navbar-text me-2 d-none"></span>
+                        <a href="profile.html" class="btn btn-outline-primary btn-sm me-1 d-none" id="profile-btn">个人中心</a>
+                        <a href="learning-records.html" class="btn btn-outline-info btn-sm me-1 d-none" id="records-btn">学习记录</a>
+                        <a href="admin-vocabulary.html" class="btn btn-outline-warning btn-sm me-1 d-none" id="admin-btn">管理员</a>
+                        <button id="login-btn" class="btn btn-outline-primary btn-sm me-1">登录</button>
+                        <button id="logout-btn" class="btn btn-outline-secondary btn-sm d-none">登出</button>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 学习记录内容 -->
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>学习报告</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action active" data-tab="quiz-history">
+                            词汇测试历史
+                        </a>
+                        <!-- <a href="vocabulary-book.html" class="list-group-item list-group-item-action" data-tab="vocabulary"> -->
+						<a href="vocabulary-book.html" class="list-group-item list-group-item-action">
+                            生词表
+                        </a>
+						<a href="translation-history.html" class="list-group-item list-group-item-action">学习汇总</a>
+                        <a href="data-export.html" class="list-group-item list-group-item-action">
+                            数据导出
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="col-lg-9">
+                <div id="quiz-history-tab" class="tab-content">
+                    <div class="card">
+                        <!-- 修改2: 移除了 "导出记录" 按钮 -->
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">词汇测试历史记录</h4>
+                            <!-- <button class="btn btn-sm btn-outline-primary" onclick="exportHistory()">导出记录</button> -->
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <!-- 修改5: 表头与测试历史记录一致 -->
+                                            <th>测试类型</th>
+                                            <th>日期</th>
+                                            <th>题目数</th>
+                                            <th>正确数</th>
+                                            <th>得分</th>
+                                            <th>耗时</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="quizHistoryTableBody">
+                                        <!-- 修改6: 表格内容将由JavaScript动态加载 -->
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <nav aria-label="测试历史分页">
+                                <ul class="pagination justify-content-center" id="quizHistoryPagination">
+                                    <!-- 修改7: 分页将由JavaScript动态生成 -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 生词表标签页 (修改版) -->
+                <div id="vocabulary-tab" class="tab-content d-none">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">生词表 (错误单词)</h4>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="loadIncorrectVocabulary()">
+                                    <i class="bi bi-arrow-repeat"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" placeholder="搜索生词..." id="searchWord">
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="wordCategoryFilter">
+                                        <option value="">全部类别</option>
+                                        <option value="noun">名词</option>
+                                        <option value="verb">动词</option>
+                                        <option value="adjective">形容词</option>
+                                        <option value="phrase">短语</option>
+                                        <option value="idiom">习语</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>英文</th>
+                                            <th>中文翻译</th>
+                                            <th>词性</th>
+                                            <th>来源</th>
+                                            <th>添加时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vocabularyTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 立信英语. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">用心打造高效英语学习平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // --- 用户管理逻辑更新 ---
+        const USER_KEY = 'lixin_user';
+        // --- 修改: 确保 API_BASE_URL 指向正确的后端地址 ---
+        const API_BASE_URL = 'http://localhost:3000/api'; // 确保此地址与您的后端服务器地址匹配
+
+        // 获取 DOM 元素
+        const userInfo = document.getElementById('user-info');
+        const profileBtn = document.getElementById('profile-btn');
+        const recordsBtn = document.getElementById('records-btn');
+        const adminBtn = document.getElementById('admin-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // 检查后端存储中的用户状态
+        async function checkUserStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    // 验证token并获取用户信息
+                    const result = await apiService.getUserInfo();
+                    updateUIForUser(result.user);
+                    return result.user;
+                } catch (error) {
+                    console.error('Token验证失败:', error);
+                    // token无效，清除
+                    apiService.logout();
+                    updateUIForUser(null);
+                    return null;
+                }
+            } else {
+                updateUIForUser(null);
+                return null;
+            }
+        }
+
+        // 根据用户状态更新UI
+        function updateUIForUser(user) {
+            if (user) {
+                // 用户已登录
+                userInfo.textContent = `欢迎, ${user.name || user.email}`;
+                userInfo.classList.remove('d-none');
+                profileBtn.classList.remove('d-none');
+                recordsBtn.classList.remove('d-none');
+                adminBtn.classList.remove('d-none');
+                loginBtn.classList.add('d-none');
+                logoutBtn.classList.remove('d-none');
+
+                // 检查是否为管理员
+                const adminEmails = ['admin@example.com', 'admin@liuxinenglish.com'];
+                if (adminEmails.includes(user.email)) {
+                    adminBtn.classList.remove('d-none');
+                } else {
+                    adminBtn.classList.add('d-none');
+                }
+
+            } else {
+                // 用户未登录
+                userInfo.classList.add('d-none');
+                profileBtn.classList.add('d-none');
+                recordsBtn.classList.add('d-none');
+                adminBtn.classList.add('d-none');
+                loginBtn.classList.remove('d-none');
+                logoutBtn.classList.add('d-none');
+            }
+        }
+
+        // 登出按钮事件
+        logoutBtn.addEventListener('click', () => {
+            apiService.logout();
+            updateUIForUser(null); // 更新UI为未登录状态
+            location.reload(); // 刷新页面
+        });
+
+        // 登录按钮事件
+        loginBtn.addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+
+        // 标签页切换
+        document.querySelectorAll('[data-tab]').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 更新激活状态
+                document.querySelectorAll('[data-tab]').forEach(item => {
+                    item.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 显示对应内容
+                const tabName = this.getAttribute('data-tab');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('d-none');
+                });
+                // 修改8: 对应的标签页ID也需要更新
+                if (tabName === 'history') {
+                    // 如果旧链接还在，指向新的quiz-history
+                    document.getElementById(`quiz-history-tab`).classList.remove('d-none');
+                } else {
+                    document.getElementById(`${tabName}-tab`).classList.remove('d-none');
+                }
+            });
+        });
+
+        // --- 修改1: 移除了 exportHistory 函数 ---
+
+
+        // --- 新增/修改: 加载用户标记的复习生词 (满足新需求) ---
+        // 加载用户标记为需要复习的生词
+        async function loadIncorrectVocabulary() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                updateVocabularyTable([]);
+                return;
+            }
+
+            const tableBody = document.getElementById('vocabularyTableBody');
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">加载中...</span></div></td></tr>';
+
+            try {
+                 // --- 修改: 更改API调用，获取用户标记为 "reviewing" 状态的词汇 ---
+                // 假设后端提供了一个 API 来获取用户特定状态的词汇记录
+                // 例如: GET /api/user-vocabulary?status=reviewing
+                // 这个API应该返回 UserVocabularyRecord 列表，并填充关联的 CoreVocabulary 信息
+                
+                // 备选方案1: 如果后端有类似功能的API，可以替换URL
+                // 备选方案2: 如果没有，可能需要后端添加一个新接口
+                
+                // 这里我们使用一个假设的、合理的API端点
+                const fullUrl = `${API_BASE_URL}/user-vocabulary`; // 基础URL
+                const params = new URLSearchParams({ status: 'reviewing' }); // 查询参数
+                const requestUrl = `${fullUrl}?${params}`;
+                
+                console.log('正在请求用户复习词汇列表:', requestUrl); // 在浏览器 F12 控制台查看
+
+                const response = await fetch(requestUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // --- 增强健壮性检查 ---
+                // 1. 检查 HTTP 状态码
+                if (!response.ok) {
+                    // --- 修改3: 提供更具体的 404 错误信息 ---
+                    if (response.status === 404) {
+                         throw new Error(`API接口未找到 (404)。请检查后端服务是否已实现 ${requestUrl} 接口并正在运行。可能需要后端添加 GET /api/user-vocabulary?status=reviewing 接口。`);
+                    } else if (response.status === 401) {
+                         throw new Error('未授权 (401)。请检查Token是否有效。');
+                    } else if (response.status === 500) {
+                         throw new Error('服务器内部错误 (500)。请检查后端日志。');
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                }
+
+                // 2. 检查 Content-Type (可选，但推荐)
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    // 尝试读取文本内容以提供更详细的错误信息
+                    const errorText = await response.text();
+                    console.error('服务器返回非JSON响应:', errorText.substring(0, 200)); // 打印前200字符
+                    throw new Error('服务器返回了错误响应，请检查后端服务是否正常运行或API路径是否正确。');
+                }
+
+                // 3. 解析 JSON
+                const result = await response.json();
+
+                // 4. 检查业务逻辑成功标志
+                if (result.success) {
+                    // 假设后端返回的格式是 { success: true, vocabulary: [...] }
+                    // 其中 vocabulary 数组的每个元素是 UserVocabularyRecord 文档，
+                    // 并且已经 populate 了 vocabularyId 字段，使其包含 CoreVocabulary 的详细信息
+                    // 例如: { _id: "...", userId: "...", vocabularyId: { _id: "...", word: "...", translation: "...", ... }, status: "reviewing", ... }
+                    // 我们需要提取 vocabularyId 对象作为词汇数据传递给 updateVocabularyTable
+                    const vocabularyData = (result.vocabulary || [])
+                        .map(record => record.vocabularyId) // 提取关联的词汇详情
+                        .filter(vocab => vocab); // 过滤掉可能为空的记录
+
+                    updateVocabularyTable(vocabularyData);
+                } else {
+                    // 后端返回了 JSON，但业务上失败了
+                    throw new Error(result.error || '获取生词表失败');
+                }
+            } catch (error) {
+                console.error('加载生词表失败:', error);
+                // 在表格中显示更友好的错误信息
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">加载失败: ${error.message}</td></tr>`;
+                // 可选：也可以通过 showMessage 函数显示
+                // showMessage(`加载生词表失败: ${error.message}`, 'danger');
+            }
+        }
+
+        // 更新生词表显示 (修改版 - 适配核心词汇数据结构)
+        function updateVocabularyTable(words) {
+            const tableBody = document.getElementById('vocabularyTableBody');
+            if (words.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center">暂无标记的复习记录</td></tr>'; // 修改提示文字
+                return;
+            }
+
+            let html = '';
+            words.forEach(word => {
+                // 假设传入的 word 对象是 CoreVocabulary 的详细信息
+                // 包含: _id, word, translation, partOfSpeech, category, createdAt 等字段
+                // 使用 try-catch 处理可能的日期格式问题
+                let recordDateDisplay = '未知';
+                try {
+                    // 如果 word.createdAt 是 Date 对象或 ISO 字符串
+                    recordDateDisplay = new Date(word.createdAt).toLocaleDateString('zh-CN');
+                } catch (e) {
+                    console.warn('日期格式化失败:', word.createdAt, e);
+                    // 如果 createdAt 是 ObjectId 时间戳或其他格式，可能需要特殊处理
+                    // 这里简单回退
+                    recordDateDisplay = word.createdAt ? new Date(parseInt(word.createdAt.toString().substring(0, 8), 16) * 1000).toLocaleDateString('zh-CN') : '未知';
+                }
+                
+                html += `
+                    <tr>
+                        <td>${word.word || '-'}</td>
+                        <td>${word.translation || '-'}</td>
+                        <td>${word.partOfSpeech || '-'}</td>
+                        <td>${word.category || '核心词汇'}</td> <!-- 来源修改为 "核心词汇" 或具体分类 -->
+                        <td>${recordDateDisplay}</td>
+                        <td>
+                            <span class="text-muted">-</span> <!-- 操作列保持空白或可以添加移除按钮 -->
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        // 显示消息 (修复潜在问题)
+        function showMessage(text, type) {
+             // 原代码中没有定义 'message' 元素，这里使用 alert 作为后备
+             // 或者，如果页面其他地方有全局消息区域，可以在这里使用它
+            alert(`${type.toUpperCase()}: ${text}`); // 简单后备
+            /*
+            // 如果页面有全局消息区域，可以这样用：
+            const messageDiv = document.getElementById('global-message'); // 假设有这个元素
+            if (messageDiv) {
+                messageDiv.textContent = text;
+                messageDiv.className = `alert alert-${type} d-block`;
+                setTimeout(() => {
+                    messageDiv.classList.add('d-none');
+                }, 3000);
+            } else {
+                alert(text);
+            }
+            */
+        }
+
+        // --- 新增：测试历史记录相关逻辑 (保持不变，但使用顶部定义的 API_BASE_URL) ---
+
+        // 测试历史记录分页相关变量
+        let quizHistoryData = [];
+        let currentQuizHistoryPage = 1;
+        const quizHistoryPageSize = 10;
+        let quizHistoryTotalPages = 0;
+
+        // 获取测试历史记录
+        async function loadQuizHistory() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                updateQuizHistoryTable([]);
+                return;
+            }
+
+            const tableBody = document.getElementById('quizHistoryTableBody');
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">加载中...</span></div></td></tr>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/quiz-records`, { // 使用顶部定义的 API_BASE_URL
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // --- 增强健壮性检查 ---
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const errorText = await response.text();
+                    console.error('服务器返回非JSON响应:', errorText.substring(0, 200));
+                    throw new Error('服务器返回了错误响应，请检查后端服务是否正常运行或API路径是否正确。');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    quizHistoryData = result.records || [];
+                    currentQuizHistoryPage = 1;
+                    quizHistoryTotalPages = Math.ceil(quizHistoryData.length / quizHistoryPageSize);
+                    renderQuizHistoryPage(currentQuizHistoryPage);
+                } else {
+                    throw new Error(result.error || '获取测试记录失败');
+                }
+            } catch (error) {
+                console.error('加载词汇测试历史记录失败:', error);
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">加载失败: ${error.message}</td></tr>`;
+            }
+        }
+
+        // 渲染测试历史记录分页
+        function renderQuizHistoryPage(page) {
+            const startIndex = (page - 1) * quizHistoryPageSize;
+            const endIndex = startIndex + quizHistoryPageSize;
+            const pageData = quizHistoryData.slice(startIndex, endIndex);
+
+            updateQuizHistoryTable(pageData);
+            renderQuizHistoryPagination();
+        }
+
+        // 更新测试历史记录表格 (修改版 - 适配正确的数据结构)
+        function updateQuizHistoryTable(records) {
+            const tableBody = document.getElementById('quizHistoryTableBody');
+            if (records.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">暂无测试记录</td></tr>';
+                return;
+            }
+
+            let html = '';
+            records.forEach(record => {
+                // --- 修改: 使用与 vocabulary-quiz.html 相同的字段映射 ---
+                const typeName = getQuizTypeName(record.type); // 使用辅助函数获取中文名称
+                // 使用 try-catch 处理可能的日期格式问题
+                let recordDateDisplay = '未知';
+                try {
+                    recordDateDisplay = new Date(record.date).toLocaleDateString('zh-CN');
+                } catch (e) {
+                    console.warn('日期格式化失败:', record.date, e);
+                    recordDateDisplay = record.date || '未知';
+                }
+                // --- 修改: 使用 record 中的正确字段 ---
+                const timeMinutes = Math.floor(record.timeTaken / 60);
+                const timeSeconds = record.timeTaken % 60;
+
+                html += `
+                    <tr>
+                        <td>${typeName}</td> <!-- 使用 typeName -->
+                        <td>${recordDateDisplay}</td>
+                        <td>${record.questions}</td> <!-- 使用 record.questions -->
+                        <td>${record.correct}</td> <!-- 使用 record.correct -->
+                        <td>
+                            <span class="badge ${
+                                record.score >= 80 ? 'bg-success' : 
+                                record.score >= 60 ? 'bg-warning' : 'bg-danger'
+                            }">
+                                ${record.score}%
+                            </span>
+                        </td>
+                        <td>${timeMinutes}分${timeSeconds}秒</td> <!-- 使用计算后的 timeMinutes 和 timeSeconds -->
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewQuizDetails('${record._id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
+
+        // 渲染测试历史记录分页控件
+        function renderQuizHistoryPagination() {
+            const pagination = document.getElementById('quizHistoryPagination');
+            quizHistoryTotalPages = Math.ceil(quizHistoryData.length / quizHistoryPageSize);
+
+            if (quizHistoryTotalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // 上一页
+            html += `
+                <li class="page-item ${currentQuizHistoryPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToQuizHistoryPage(${currentQuizHistoryPage - 1})">上一页</a>
+                </li>
+            `;
+
+            // 页码
+            for (let i = 1; i <= quizHistoryTotalPages; i++) {
+                html += `
+                    <li class="page-item ${i === currentQuizHistoryPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="goToQuizHistoryPage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+
+            // 下一页
+            html += `
+                <li class="page-item ${currentQuizHistoryPage === quizHistoryTotalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToQuizHistoryPage(${currentQuizHistoryPage + 1})">下一页</a>
+                </li>
+            `;
+
+            pagination.innerHTML = html;
+        }
+
+        // 跳转到测试历史记录指定页面
+        function goToQuizHistoryPage(page) {
+            if (page >= 1 && page <= quizHistoryTotalPages) {
+                currentQuizHistoryPage = page;
+                renderQuizHistoryPage(currentQuizHistoryPage);
+            }
+        }
+
+        // 获取测试类型名称 (与vocabulary-quiz.html保持一致)
+        function getQuizTypeName(type) {
+            const typeMap = {
+                'chinese-to-english': '中译英',
+                'english-to-chinese': '英译中',
+                'spelling': '拼写测试'
+            };
+            return typeMap[type] || type;
+        }
+
+        // 查看测试详情 (与vocabulary-quiz.html保持一致)
+        function viewQuizDetails(recordId) {
+            const record = quizHistoryData.find(r => r._id === recordId);
+            if (record) {
+                alert(`
+                    测试详情：
+                    类型：${getQuizTypeName(record.type)}
+                    日期：${new Date(record.date).toLocaleString('zh-CN')}
+                    题目数：${record.questions}
+                    正确数：${record.correct}
+                    得分：${record.score}%
+                    用时：${Math.floor(record.timeTaken / 60)}分${record.timeTaken % 60}秒
+                `);
+            }
+        }
+
+        // 页面加载时检查用户状态并加载测试历史和生词表
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkUserStatus();
+            // 默认加载测试历史记录
+            await loadQuizHistory();
+            // 默认加载生词表 (用户标记的复习单词)
+            await loadIncorrectVocabulary(); // 修改后调用新的函数
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心词汇积累 - 五年级英语 - 立信英语</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        .vocabulary-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .vocabulary-card:hover {
+            transform: translateY(-5px);
+        }
+        .flashcard {
+            perspective: 1000px;
+            height: 200px;
+            margin: 20px 0;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .flashcard-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .flashcard-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+        .progress-container {
+            position: sticky;
+            top: 70px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .pronunciation-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .pronunciation-btn:hover {
+            color: #ffeb3b;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">立信英语</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="si-nian-ji.html">文章</a></li>
+                    <li class="nav-item"><a class="nav-link" href="wu-nian-ji.html">五年级</a></li>
+                    
+                    <!-- 登录状态显示 - 添加的部分 -->
+                    <li class="nav-item">
+                        <span id="user-info" class="navbar-text me-2 d-none"></span>
+                        <a href="profile.html" class="btn btn-outline-primary btn-sm me-1 d-none" id="profile-btn">个人中心</a>
+                        <a href="learning-records.html" class="btn btn-outline-info btn-sm me-1 d-none" id="records-btn">学习记录</a>
+                        <a href="admin-vocabulary.html" class="btn btn-outline-warning btn-sm me-1 d-none" id="admin-btn">管理员</a>
+                        <button id="login-btn" class="btn btn-outline-primary btn-sm me-1">登录</button>
+                        <button id="logout-btn" class="btn btn-outline-secondary btn-sm d-none">登出</button>
+                    </li>
+                    <!-- 登录状态显示结束 -->
+                    
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面内容 -->
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>五年级英语</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="wu-nian-ji.html" class="list-group-item list-group-item-action">
+                            返回主页面
+                        </a>
+                        <a href="translation-practice-5nianji.html" class="list-group-item list-group-item-action">
+                            翻译特训
+                        </a>
+                        <a href="core-vocabulary-5nianji.html" class="list-group-item list-group-item-action active">
+                            核心词汇积累
+                        </a>
+                        <a href="vocabulary-quiz-5nianji.html" class="list-group-item list-group-item-action">
+                            词汇测试
+                        </a>
+                        <a href="si-nian-ji.html" class="list-group-item list-group-item-action">
+                            ← 返回文章
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="col-lg-9">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="index.html">首页</a></li>
+                        <li class="breadcrumb-item"><a href="si-nian-ji.html">文章</a></li>
+                        <li class="breadcrumb-item"><a href="wu-nian-ji.html">五年级</a></li>
+                        <li class="breadcrumb-item active">核心词汇积累</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>五年级核心词汇积累</h2>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-funnel"></i> 筛选
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="filterVocabulary('all')">全部词汇</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterVocabulary('new')">新学词汇</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterVocabulary('review')">复习词汇</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterVocabulary('mastered')">已掌握</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 学习进度 -->
+                <div class="progress-container mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>学习进度</span>
+                        <span id="progress-text">0/0</span>
+                    </div>
+                    <div class="progress">
+                        <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 学习模式切换 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="learningModeTabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#flashcard-mode" data-bs-toggle="tab">闪卡模式</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#list-mode" data-bs-toggle="tab">列表模式</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#quiz-mode" data-bs-toggle="tab">测试模式</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- 闪卡模式 -->
+                            <div class="tab-pane fade show active" id="flashcard-mode">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5>闪卡学习</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="prevCard()">
+                                            <i class="bi bi-arrow-left"></i> 上一个
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="nextCard()">
+                                            下一个 <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div id="flashcard-container" class="flashcard">
+                                        <div class="flashcard-inner">
+                                            <div class="flashcard-front">
+                                                <h3>加载中...</h3>
+                                                <p>请稍候</p>
+                                            </div>
+                                            <div class="flashcard-back">
+                                                <h3>加载中...</h3>
+                                                <p>请稍候</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-success me-2" onclick="flipCard()">
+                                            <i class="bi bi-arrow-repeat"></i> 翻转卡片
+                                        </button>
+                                        <button class="btn btn-primary me-2" onclick="markAsLearned()">
+                                            <i class="bi bi-check-circle"></i> 已掌握
+                                        </button>
+                                        <button class="btn btn-warning" onclick="addToReview()">
+                                            <i class="bi bi-star"></i> 加入复习
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 列表模式 -->
+                            <div class="tab-pane fade" id="list-mode">
+                                <h5>词汇列表</h5>
+                                <div class="row" id="vocabulary-list">
+                                    <div class="col-12 text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 测试模式 -->
+                            <div class="tab-pane fade" id="quiz-mode">
+                                <div id="quiz-container">
+                                    <h5>词汇测试</h5>
+                                    <div class="text-center">
+                                        <p>请选择测试类型开始测试</p>
+                                        <button class="btn btn-primary me-2" onclick="startQuiz('chinese-to-english')">
+                                            <i class="bi bi-translate"></i> 中译英
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="startQuiz('english-to-chinese')">
+                                            <i class="bi bi-journal-text"></i> 英译中
+                                        </button>
+                                        <button class="btn btn-info" onclick="startQuiz('spelling')">
+                                            <i class="bi bi-keyboard"></i> 拼写测试
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习统计 -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-primary">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">总词汇</h5>
+                                <h2 id="total-words">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-success">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">已掌握</h5>
+                                <h2 id="mastered-words">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">待复习</h5>
+                                <h2 id="review-words">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-info">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">掌握率</h5>
+                                <h2 id="mastery-rate">0%</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习建议 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>词汇学习建议</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul>
+                            <li><strong>每日坚持</strong> : 每天学习10-15个新词汇，保持学习连续性</li>
+                            <li><strong>多感官记忆</strong> : 结合视觉、听觉、动手书写等多种方式记忆词汇</li>
+                            <li><strong>语境学习</strong> : 在句子和文章中学习词汇，理解词汇的不同用法</li>
+                            <li><strong>定期复习</strong> : 使用间隔重复法定期复习已学词汇</li>
+                            <li><strong>实际应用</strong> : 尝试在写作和口语中使用新学的词汇</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 立信英语. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">用心打造高效英语学习平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- 核心词汇学习系统 - 修复版本 ---
+        class CoreVocabularySystem {
+            constructor() {
+                this.vocabulary = [];
+                this.currentCardIndex = 0;
+                this.learnedWords = new Set(JSON.parse(localStorage.getItem('learnedWords') || '[]'));
+                this.reviewWords = new Set(JSON.parse(localStorage.getItem('reviewWords') || '[]'));
+                this.quizQuestions = [];
+                this.currentQuestionIndex = 0;
+                this.quizScore = 0;
+                this.quizMode = '';
+                this.apiBaseUrl = 'http://localhost:3000/api';
+                //this.todayKey = 'daily_vocabulary_' + 20250603; // 按日期生成缓存key
+				this.todayKey = 'daily_vocabulary_' + new Date().toISOString().split('T')[0]; // 按日期生成缓存key
+            }
+
+            // 初始化系统
+            async init() {
+                await this.checkLogin();
+                await this.loadDailyVocabulary(); // 修复：按日期加载词汇
+                this.updateStatistics();
+                this.renderFlashcard();
+                this.renderVocabularyList();
+            }
+
+            // 检查登录状态
+            async checkLogin() {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/user`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.updateUIForUser(result.user);
+                        return result.user;
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('Token验证失败:', error);
+                    localStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+            }
+
+            // 根据用户状态更新UI
+            updateUIForUser(user) {
+                const userInfo = document.getElementById('user-info');
+                const profileBtn = document.getElementById('profile-btn');
+                const recordsBtn = document.getElementById('records-btn');
+                const adminBtn = document.getElementById('admin-btn');
+                const loginBtn = document.getElementById('login-btn');
+                const logoutBtn = document.getElementById('logout-btn');
+                
+                if (user) {
+                    // 用户已登录
+                    userInfo.textContent = `欢迎, ${user.name || user.email}`;
+                    userInfo.classList.remove('d-none');
+                    profileBtn.classList.remove('d-none');
+                    recordsBtn.classList.remove('d-none');
+                    adminBtn.classList.remove('d-none');
+                    loginBtn.classList.add('d-none');
+                    logoutBtn.classList.remove('d-none');
+
+                    // 检查是否为管理员
+                    const adminEmails = ['admin@example.com', 'admin@liuxinenglish.com'];
+                    if (adminEmails.includes(user.email)) {
+                        adminBtn.classList.remove('d-none');
+                    } else {
+                        adminBtn.classList.add('d-none');
+                    }
+                } else {
+                    // 用户未登录
+                    userInfo.classList.add('d-none');
+                    profileBtn.classList.add('d-none');
+                    recordsBtn.classList.add('d-none');
+                    adminBtn.classList.add('d-none');
+                    loginBtn.classList.remove('d-none');
+                    logoutBtn.classList.add('d-none');
+                }
+            }
+
+            // 按日期加载每日词汇（10-15个）- 修复版本
+            async loadDailyVocabulary() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        throw new Error('请先登录');
+                    }
+                    
+                    console.log('开始加载每日词汇...');
+                    
+                    // 检查本地存储中是否已有今天的词汇
+                    //const cachedVocabulary = localStorage.getItem(this.todayKey);
+                    //if (cachedVocabulary) {
+                    //    console.log('使用缓存的今日词汇');
+                    //    this.vocabulary = JSON.parse(cachedVocabulary);
+                    //    return;
+                    //}
+
+					// 在 loadDailyVocabulary 方法中，读取缓存的地方
+					// 修改前：
+					// const cachedVocabulary = localStorage.getItem(this.todayKey);
+					// if (cachedVocabulary) {
+					//     this.vocabulary = JSON.parse(cachedVocabulary);
+					//     return;
+					// }
+					
+					// 修改后：
+					const cachedDataString = localStorage.getItem(this.todayKey);
+					if (cachedDataString) {
+						try {
+							const cachedData = JSON.parse(cachedDataString);
+							// 验证缓存数据是否符合当前要求 (例如 category 为 grade5)
+							if (cachedData && cachedData.category === 'grade5') { // && cachedData.version === '1.0' // 可选版本检查
+								console.log('使用验证通过的缓存词汇');
+								this.vocabulary = cachedData.vocabulary || [];
+								return;
+							} else {
+								console.log('缓存数据不符合当前要求 (category不匹配或版本过旧)，将重新请求API');
+								// 可选：清除不匹配的旧缓存
+								// localStorage.removeItem(this.todayKey);
+							}
+						} catch (parseError) {
+							console.error('解析缓存数据失败:', parseError);
+							// 清除损坏的缓存
+							localStorage.removeItem(this.todayKey);
+						}
+					}// 如果没有缓存，或缓存无效，则继续执行后续的 API 请求逻辑...
+                    
+                    // 调用后端API获取每日随机词汇，指定category为grade5
+                    const response = await fetch(`${this.apiBaseUrl}/core-vocabulary/daily?count=12&category=grade5`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    console.log('后端响应:', result);
+                    
+                    if (result.success) {
+                        this.vocabulary = result.vocabulary || [];
+                        // 缓存今天的词汇到本地存储
+                        //localStorage.setItem(this.todayKey, JSON.stringify(this.vocabulary));
+						// 修改前：
+						// localStorage.setItem(this.todayKey, JSON.stringify(this.vocabulary));
+						
+						// 修改后：
+						const cachePayload = {
+							vocabulary: this.vocabulary,
+							category: 'grade5', // 明确记录缓存时的 category
+							version: '1.0',     // 可选：添加版本号，方便未来做更复杂的缓存更新逻辑
+							timestamp: new Date().toISOString()
+						};
+						localStorage.setItem(this.todayKey, JSON.stringify(cachePayload));
+                        console.log('成功加载并缓存词汇:', this.vocabulary.length, '个');
+                    } else {
+                        throw new Error(result.error || '获取词汇失败');
+                    }
+                } catch (error) {
+                    console.error('加载每日词汇失败:', error);
+                    // 使用模拟数据作为后备
+                    this.vocabulary = this.getMockVocabulary();
+                    // 缓存模拟数据
+                    //localStorage.setItem(this.todayKey, JSON.stringify(this.vocabulary));
+					// 修改前：
+					// localStorage.setItem(this.todayKey, JSON.stringify(this.vocabulary));
+					
+					// 修改后：
+					const cachePayload = {
+						vocabulary: this.vocabulary,
+						category: 'grade5', // 明确记录缓存时的 category
+						version: '1.0',     // 可选：添加版本号，方便未来做更复杂的缓存更新逻辑
+						timestamp: new Date().toISOString()
+					};
+					localStorage.setItem(this.todayKey, JSON.stringify(cachePayload));
+					
+                }
+            }
+
+            // 获取模拟词汇数据
+            getMockVocabulary() {
+                return [
+                    {
+                        _id: '1',
+                        word: "welcome",
+                        pronunciation: "/ˈwelkəm/",
+                        translation: "欢迎",
+                        partOfSpeech: "感叹词",
+                        example: "Welcome to our school!",
+                        exampleTranslation: "欢迎来到我们学校！",
+                        difficulty: "beginner",
+                        category: "school",
+                        tags: ["高频词汇", "基础问候"]
+                    },
+                    {
+                        _id: '2',
+                        word: "introduce",
+                        pronunciation: "/ˌɪntrəˈduːs/",
+                        translation: "介绍",
+                        partOfSpeech: "动词",
+                        example: "Let me introduce myself.",
+                        exampleTranslation: "让我介绍一下自己。",
+                        difficulty: "intermediate",
+                        category: "communication",
+                        tags: ["考试重点"]
+                    },
+                    {
+                        _id: '3',
+                        word: "comfortable",
+                        pronunciation: "/ˈkʌmfətəbl/",
+                        translation: "舒适的，舒服的",
+                        partOfSpeech: "形容词",
+                        example: "Make yourself comfortable.",
+                        exampleTranslation: "请随便坐。",
+                        difficulty: "intermediate",
+                        category: "daily",
+                        tags: ["日常生活"]
+                    },
+                    {
+                        _id: '4',
+                        word: "geography",
+                        pronunciation: "/dʒiˈɒɡrəfi/",
+                        translation: "地理学",
+                        partOfSpeech: "名词",
+                        example: "I like geography very much.",
+                        exampleTranslation: "我非常喜欢地理。",
+                        difficulty: "advanced",
+                        category: "subject",
+                        tags: ["学科词汇"]
+                    },
+                    {
+                        _id: '5',
+                        word: "biology",
+                        pronunciation: "/baɪˈɒlədʒi/",
+                        translation: "生物学",
+                        partOfSpeech: "名词",
+                        example: "Biology is my favorite subject.",
+                        exampleTranslation: "生物是我最喜欢的科目。",
+                        difficulty: "advanced",
+                        category: "subject",
+                        tags: ["学科词汇", "考试重点"]
+                    },
+                    {
+                        _id: '6',
+                        word: "exchange",
+                        pronunciation: "/ɪksˈtʃeɪndʒ/",
+                        translation: "交换，交流",
+                        partOfSpeech: "动词/名词",
+                        example: "We can exchange ideas.",
+                        exampleTranslation: "我们可以交流想法。",
+                        difficulty: "intermediate",
+                        category: "communication",
+                        tags: ["考试重点"]
+                    },
+                    {
+                        _id: '7',
+                        word: "similar",
+                        pronunciation: "/ˈsɪmələ(r)/",
+                        translation: "相似的，类似的",
+                        partOfSpeech: "形容词",
+                        example: "Our opinions are similar.",
+                        exampleTranslation: "我们的观点相似。",
+                        difficulty: "intermediate",
+                        category: "description",
+                        tags: ["描述词汇"]
+                    },
+                    {
+                        _id: '8',
+                        word: "difference",
+                        pronunciation: "/ˈdɪfrəns/",
+                        translation: "不同，差异",
+                        partOfSpeech: "名词",
+                        example: "What's the difference between them?",
+                        exampleTranslation: "它们之间有什么不同？",
+                        difficulty: "intermediate",
+                        category: "description",
+                        tags: ["描述词汇"]
+                    },
+                    {
+                        _id: '9',
+                        word: "environment",
+                        pronunciation: "/ɪnˈvaɪrənmənt/",
+                        translation: "环境",
+                        partOfSpeech: "名词",
+                        example: "We should protect our environment.",
+                        exampleTranslation: "我们应该保护环境。",
+                        difficulty: "intermediate",
+                        category: "daily",
+                        tags: ["环境保护"]
+                    },
+                    {
+                        _id: '10',
+                        word: "technology",
+                        pronunciation: "/tekˈnɒlədʒi/",
+                        translation: "技术",
+                        partOfSpeech: "名词",
+                        example: "Modern technology makes life easier.",
+                        exampleTranslation: "现代技术使生活更便利。",
+                        difficulty: "advanced",
+                        category: "daily",
+                        tags: ["科技词汇"]
+                    },
+                    {
+                        _id: '11',
+                        word: "development",
+                        pronunciation: "/dʒɪˈveləpmənt/",
+                        translation: "发展，开发",
+                        partOfSpeech: "名词",
+                        example: "China has made great development.",
+                        exampleTranslation: "中国取得了巨大的发展。",
+                        difficulty: "advanced",
+                        category: "daily",
+                        tags: ["社会发展"]
+                    },
+                    {
+                        _id: '12',
+                        word: "improve",
+                        pronunciation: "/ɪmˈpruːv/",
+                        translation: "改善，提高",
+                        partOfSpeech: "动词",
+                        example: "You need to improve your English.",
+                        exampleTranslation: "你需要提高你的英语。",
+                        difficulty: "intermediate",
+                        category: "school",
+                        tags: ["学习词汇"]
+                    }
+                ];
+            }
+
+            // 渲染闪卡
+            renderFlashcard() {
+                const flashcardContainer = document.getElementById('flashcard-container');
+                if (this.vocabulary.length === 0) {
+                    flashcardContainer.innerHTML = `
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <h3>暂无词汇</h3>
+                                <p>请稍候</p>
+                            </div>
+                            <div class="flashcard-back">
+                                <h3>暂无词汇</h3>
+                                <p>请稍候</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const currentWord = this.vocabulary[this.currentCardIndex];
+                flashcardContainer.innerHTML = `
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <h3>${currentWord.word}</h3>
+                            <p>${currentWord.pronunciation}</p>
+                            <small>${currentWord.partOfSpeech}</small>
+                        </div>
+                        <div class="flashcard-back">
+                            <h3>${currentWord.translation}</h3>
+                            <p>${currentWord.example}</p>
+                            <small>${currentWord.exampleTranslation}</small>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 翻转闪卡
+            flipCard() {
+                const flashcard = document.getElementById('flashcard-container');
+                flashcard.classList.toggle('flipped');
+            }
+
+            // 上一张卡片
+            prevCard() {
+                if (this.currentCardIndex > 0) {
+                    this.currentCardIndex--;
+                    this.renderFlashcard();
+                    document.getElementById('flashcard-container').classList.remove('flipped');
+                }
+            }
+
+            // 下一张卡片
+            nextCard() {
+                if (this.currentCardIndex < this.vocabulary.length - 1) {
+                    this.currentCardIndex++;
+                    this.renderFlashcard();
+                    document.getElementById('flashcard-container').classList.remove('flipped');
+                }
+            }
+
+            // 标记为已掌握
+            async markAsLearned() {
+                const currentWord = this.vocabulary[this.currentCardIndex];
+                this.learnedWords.add(currentWord._id);
+                localStorage.setItem('learnedWords', JSON.stringify([...this.learnedWords]));
+                this.updateStatistics();
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        await fetch(`${this.apiBaseUrl}/core-vocabulary/record`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vocabularyId: currentWord._id,
+                                status: 'mastered',
+                                isCorrect: true
+                            })
+                        });
+                    }
+                } catch (error) {
+                    console.error('更新学习记录失败:', error);
+                }
+                
+                alert(`"${currentWord.word}" 已标记为已掌握！`);
+            }
+
+            // 加入复习
+            async addToReview() {
+                const currentWord = this.vocabulary[this.currentCardIndex];
+                this.reviewWords.add(currentWord._id);
+                localStorage.setItem('reviewWords', JSON.stringify([...this.reviewWords]));
+                this.updateStatistics();
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        await fetch(`${this.apiBaseUrl}/core-vocabulary/record`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vocabularyId: currentWord._id,
+                                status: 'reviewing',
+                                isCorrect: null
+                            })
+                        });
+                    }
+                } catch (error) {
+                    console.error('更新学习记录失败:', error);
+                }
+                
+                alert(`"${currentWord.word}" 已加入复习列表！`);
+            }
+
+            // 渲染词汇列表
+            renderVocabularyList() {
+                const listContainer = document.getElementById('vocabulary-list');
+                if (this.vocabulary.length === 0) {
+                    listContainer.innerHTML = '<div class="col-12 text-center"><p>暂无词汇数据</p></div>';
+                    return;
+                }
+
+                let html = '';
+                this.vocabulary.forEach((word, index) => {
+                    const isLearned = this.learnedWords.has(word._id);
+                    const isReview = this.reviewWords.has(word._id);
+                    
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 vocabulary-card ${isLearned ? 'border-success' : ''} ${isReview ? 'border-warning' : ''}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="card-title">${word.word}</h5>
+                                            <p class="card-text mb-1">${word.translation}</p>
+                                            <small class="text-muted">${word.pronunciation} | ${word.partOfSpeech}</small>
+                                        </div>
+                                        <div>
+                                            ${isLearned ? '<span class="badge bg-success">已掌握</span>' : ''}
+                                            ${isReview ? '<span class="badge bg-warning">复习中</span>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">${word.example}</small>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="coreVocabulary.showWordDetail(${index})">
+                                            详情
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success me-1" onclick="coreVocabulary.markWordAsLearned('${word._id}')">
+                                            ${isLearned ? '已掌握' : '标记掌握'}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="coreVocabulary.addWordToReview('${word._id}')">
+                                            ${isReview ? '复习中' : '加入复习'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                listContainer.innerHTML = html;
+            }
+
+            // 显示词汇详情
+            showWordDetail(index) {
+                const word = this.vocabulary[index];
+                alert(`
+                    词汇详情：
+                    英文：${word.word}
+                    中文：${word.translation}
+                    发音：${word.pronunciation}
+                    词性：${word.partOfSpeech}
+                    例句：${word.example}
+                    例句翻译：${word.exampleTranslation}
+                    难度：${word.difficulty}
+                    分类：${word.category}
+                    标签：${Array.isArray(word.tags) ? word.tags.join(', ') : '无'}
+                `);
+            }
+
+            // 标记词汇为已掌握
+            async markWordAsLearned(wordId) {
+                if (this.learnedWords.has(wordId)) {
+                    this.learnedWords.delete(wordId);
+                } else {
+                    this.learnedWords.add(wordId);
+                }
+                localStorage.setItem('learnedWords', JSON.stringify([...this.learnedWords]));
+                this.updateStatistics();
+                this.renderVocabularyList();
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        const word = this.vocabulary.find(w => w._id === wordId);
+                        if (word) {
+                            await fetch(`${this.apiBaseUrl}/core-vocabulary/record`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    vocabularyId: wordId,
+                                    status: this.learnedWords.has(wordId) ? 'mastered' : 'learning',
+                                    isCorrect: true
+                                })
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('更新学习记录失败:', error);
+                }
+            }
+
+            // 添加词汇到复习列表
+            async addWordToReview(wordId) {
+                if (this.reviewWords.has(wordId)) {
+                    this.reviewWords.delete(wordId);
+                } else {
+                    this.reviewWords.add(wordId);
+                }
+                localStorage.setItem('reviewWords', JSON.stringify([...this.reviewWords]));
+                this.updateStatistics();
+                this.renderVocabularyList();
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        const word = this.vocabulary.find(w => w._id === wordId);
+                        if (word) {
+                            await fetch(`${this.apiBaseUrl}/core-vocabulary/record`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    vocabularyId: wordId,
+                                    status: this.reviewWords.has(wordId) ? 'reviewing' : 'learning',
+                                    isCorrect: null
+                                })
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('更新学习记录失败:', error);
+                }
+            }
+
+            // 开始测试
+            async startQuiz(mode) {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        alert('请先登录获取访问权限');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    this.quizMode = mode;
+                    this.currentQuestionIndex = 0;
+                    this.quizScore = 0;
+                    
+                    // 生成测试题目
+                    await this.generateQuizQuestions();
+                    
+                    // 显示第一个问题
+                    this.showQuizQuestion();
+                    
+                } catch (error) {
+                    alert('开始测试失败：' + error.message);
+                }
+            }
+
+            // 生成测试题目
+            async generateQuizQuestions() {
+                this.quizQuestions = [];
+                const shuffledVocabulary = [...this.vocabulary].sort(() => Math.random() - 0.5);
+                
+                shuffledVocabulary.slice(0, 5).forEach(word => {
+                    let question = {};
+                    
+                    switch(this.quizMode) {
+                        case 'chinese-to-english':
+                            question = {
+                                type: 'chinese-to-english',
+                                question: `"${word.translation}" 的英文是什么？`,
+                                correctAnswer: word.word.toLowerCase(),
+                                options: this.generateOptions(word.word, 'english'),
+                                word: word
+                            };
+                            break;
+                        case 'english-to-chinese':
+                            question = {
+                                type: 'english-to-chinese',
+                                question: `"${word.word}" 的中文意思是什么？`,
+                                correctAnswer: word.translation,
+                                options: this.generateOptions(word.translation, 'chinese'),
+                                word: word
+                            };
+                            break;
+                        case 'spelling':
+                            question = {
+                                type: 'spelling',
+                                question: `请拼写单词：${word.translation}`,
+                                correctAnswer: word.word.toLowerCase(),
+                                word: word
+                            };
+                            break;
+                    }
+                    
+                    this.quizQuestions.push(question);
+                });
+            }
+
+            // 生成选项
+            generateOptions(correctAnswer, type) {
+                const options = [correctAnswer];
+                const allAnswers = type === 'english' 
+                    ? this.vocabulary.map(w => w.word) 
+                    : this.vocabulary.map(w => w.translation);
+                
+                const wrongAnswers = allAnswers
+                    .filter(answer => answer !== correctAnswer)
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 3);
+                
+                return [...options, ...wrongAnswers].sort(() => Math.random() - 0.5);
+            }
+
+            // 显示测试问题
+            showQuizQuestion() {
+                const quizContainer = document.getElementById('quiz-container');
+                const question = this.quizQuestions[this.currentQuestionIndex];
+                
+                if (!question) {
+                    this.showQuizResults();
+                    return;
+                }
+                
+                let html = `
+                    <h5>测试进行中 (${this.currentQuestionIndex + 1}/${this.quizQuestions.length})</h5>
+                    <p class="lead">${question.question}</p>
+                `;
+                
+                if (this.quizMode === 'spelling') {
+                    html += `
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="answerInput" placeholder="请输入答案">
+                        </div>
+                        <button class="btn btn-primary" onclick="coreVocabulary.checkSpellingAnswer()">
+                            <span id="submitBtnText">提交</span>
+                            <span id="submitBtnLoading" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    `;
+                } else {
+                    html += '<div class="row">';
+                    question.options.forEach((option, index) => {
+                        html += `
+                            <div class="col-md-6 mb-2">
+                                <button class="btn btn-outline-primary option-btn w-100" onclick="coreVocabulary.checkMultipleChoiceAnswer('${option}')">
+                                    ${option}
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+                
+                quizContainer.innerHTML = html;
+            }
+
+            // 检查拼写答案
+            async checkSpellingAnswer() {
+                const input = document.getElementById('answerInput');
+                const answer = input.value.trim().toLowerCase();
+                const question = this.quizQuestions[this.currentQuestionIndex];
+                
+                const submitBtn = document.getElementById('submitBtnText').parentElement;
+                const submitBtnText = document.getElementById('submitBtnText');
+                const submitBtnLoading = document.getElementById('submitBtnLoading');
+                
+                // 显示加载状态
+                submitBtn.disabled = true;
+                submitBtnText.classList.add('d-none');
+                submitBtnLoading.classList.remove('d-none');
+                
+                let isCorrect = false;
+                if (answer === question.correctAnswer) {
+                    this.quizScore++;
+                    alert('回答正确！');
+                    isCorrect = true;
+                } else {
+                    alert(`回答错误！正确答案是：${question.correctAnswer}`);
+                }
+                
+                // 更新学习记录
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        await fetch(`${this.apiBaseUrl}/core-vocabulary/record`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vocabularyId: question.word._id,
+                                status: 'reviewing',
+                                isCorrect: isCorrect
+                            })
+                        });
+                    }
+                } catch (error) {
+                    console.error('更新学习记录失败:', error);
+                }
+                
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtnText.classList.remove('d-none');
+                submitBtnLoading.classList.add('d-none');
+                
+                this.currentQuestionIndex++;
+                setTimeout(() => {
+                    this.showQuizQuestion();
+                }, 1500);
+            }
+
+            // 检查选择题答案
+            async checkMultipleChoiceAnswer(selectedAnswer) {
+                const question = this.quizQuestions[this.currentQuestionIndex];
+                
+                let isCorrect = false;
+                if (selectedAnswer === question.correctAnswer) {
+                    this.quizScore++;
+                    alert('回答正确！');
+                    isCorrect = true;
+                } else {
+                    alert(`回答错误！正确答案是：${question.correctAnswer}`);
+                }
+                
+                // 更新学习记录
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        await fetch(`${this.apiBaseUrl}/core-vocabulary/record`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vocabularyId: question.word._id,
+                                status: 'reviewing',
+                                isCorrect: isCorrect
+                            })
+                        });
+                    }
+                } catch (error) {
+                    console.error('更新学习记录失败:', error);
+                }
+                
+                this.currentQuestionIndex++;
+                setTimeout(() => {
+                    this.showQuizQuestion();
+                }, 1500);
+            }
+
+            // 显示测试结果
+            showQuizResults() {
+                const quizContainer = document.getElementById('quiz-container');
+                const percentage = Math.round((this.quizScore / this.quizQuestions.length) * 100);
+                
+                quizContainer.innerHTML = `
+                    <div class="text-center">
+                        <h3>测试完成！</h3>
+                        <div class="mb-3">
+                            <div class="display-4 text-${percentage >= 80 ? 'success' : percentage >= 60 ? 'warning' : 'danger'}">
+                                ${percentage}%
+                            </div>
+                            <p>得分：${this.quizScore}/${this.quizQuestions.length}</p>
+                        </div>
+                        <div class="mb-3">
+                            ${percentage >= 80 ? 
+                                '<div class="alert alert-success">优秀！继续保持！</div>' : 
+                                percentage >= 60 ? 
+                                '<div class="alert alert-warning">不错，但还有提升空间！</div>' : 
+                                '<div class="alert alert-danger">需要继续努力哦！</div>'
+                            }
+                        </div>
+                        <button class="btn btn-primary me-2" onclick="coreVocabulary.startQuiz('${this.quizMode}')">
+                            再次测试
+                        </button>
+                        <button class="btn btn-secondary" onclick="location.reload()">
+                            返回学习
+                        </button>
+                    </div>
+                `;
+            }
+
+            // 筛选词汇
+            filterVocabulary(filterType) {
+                alert(`筛选功能将在后续版本中实现！当前筛选: ${filterType}`);
+            }
+
+            // 更新统计信息
+            updateStatistics() {
+                const totalWords = this.vocabulary.length;
+                const masteredWords = this.learnedWords.size;
+                const reviewWords = this.reviewWords.size;
+                const masteryRate = totalWords > 0 ? Math.round((masteredWords / totalWords) * 100) : 0;
+                
+                document.getElementById('total-words').textContent = totalWords;
+                document.getElementById('mastered-words').textContent = masteredWords;
+                document.getElementById('review-words').textContent = reviewWords;
+                document.getElementById('mastery-rate').textContent = `${masteryRate}%`;
+                
+                // 更新进度条
+                document.getElementById('progress-bar').style.width = `${masteryRate}%`;
+                document.getElementById('progress-text').textContent = `${masteredWords}/${totalWords}`;
+            }
+        }
+
+        // 创建全局核心词汇学习系统实例
+        const coreVocabulary = new CoreVocabularySystem();
+
+        // 登出按钮事件
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('learnedWords');
+            localStorage.removeItem('reviewWords');
+            window.location.href = 'index.html';
+        });
+
+        // 登录按钮事件
+        document.getElementById('login-btn').addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 检查登录状态
+            const user = await coreVocabulary.checkLogin();
+            if (!user) {
+                return;
+            }
+            
+            // 加载每日词汇（按日期缓存）
+            await coreVocabulary.loadDailyVocabulary();
+            
+            // 更新统计信息
+            coreVocabulary.updateStatistics();
+            
+            // 渲染闪卡
+            coreVocabulary.renderFlashcard();
+            
+            // 渲染词汇列表
+            coreVocabulary.renderVocabularyList();
+        });
+
+        // 全局函数绑定
+        function flipCard() {
+            coreVocabulary.flipCard();
+        }
+
+        function prevCard() {
+            coreVocabulary.prevCard();
+        }
+
+        function nextCard() {
+            coreVocabulary.nextCard();
+        }
+
+        function markAsLearned() {
+            coreVocabulary.markAsLearned();
+        }
+
+        function addToReview() {
+            coreVocabulary.addToReview();
+        }
+
+        function filterVocabulary(filterType) {
+            coreVocabulary.filterVocabulary(filterType);
+        }
+
+        function startQuiz(mode) {
+            coreVocabulary.startQuiz(mode);
+        }
+
+        function checkSpellingAnswer() {
+            coreVocabulary.checkSpellingAnswer();
+        }
+
+        function checkMultipleChoiceAnswer(selectedAnswer) {
+            coreVocabulary.checkMultipleChoiceAnswer(selectedAnswer);
+        }
+    </script>
+</body>
+</html>

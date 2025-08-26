@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小王子 - 您的公司名称</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="\css\style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">您的Logo</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html#home">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="articles.html">文章</a></li>
+                    <li class="nav-item"><a class="nav-link" href="little-prince.html">小王子</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面内容 -->
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>学习资源索引</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="china-daily.html" class="list-group-item list-group-item-action">
+                            中国日报
+                        </a>
+                        <a href="little-prince.html" class="list-group-item list-group-item-action active">
+                            小王子
+                        </a>
+                        <a href="articles.html" class="list-group-item list-group-item-action">
+                            ← 返回总目录
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容 -->
+            <div class="col-lg-9">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="index.html">首页</a></li>
+                        <li class="breadcrumb-item"><a href="articles.html">文章</a></li>
+                        <li class="breadcrumb-item active">小王子</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>小王子 (The Little Prince)</h2>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            排序方式
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">最新发布</a></li>
+                            <li><a class="dropdown-item" href="#">最受欢迎</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 方法介绍 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">英语学习方法介绍</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>1. 学习英语常见问题</h5>
+                        <ul>
+                            <li><strong>听不懂</strong> : 很多英语老师默认孩子学过中文语法，直接讲课。</li>
+                            <li><strong>记不住</strong> : 单词、语法太多，没时间复习。</li>
+                            <li><strong>没意思</strong> : 平时用不到，考试抱佛脚。</li>
+                        </ul>
+
+                        <h5>2. 立信英语特训的学习逻辑</h5>
+                        <ul>
+                            <li><strong>时间短</strong> : 每天半小时，让改变悄然发生。</li>
+                            <li><strong>方法正确</strong> : 不再把英语拆分成单词和语法，而是综合学习，扩大知识面，更贴近新中考高考。</li>
+                            <li><strong>项目制学习</strong> : 通过每天翻译一篇文章，让单词和语法自然融入，不死记硬背，文章素材多样提高知识面。</li>
+                            <li><strong>工具便捷</strong> : 提供翻译、语音识别等工具，方便学习。</li>
+                            <li><strong>进步可见</strong> : 可以看到自己学习报告的前后对比，成就感强。</li>
+                        </ul>
+
+                        <h5>3. 训练原理</h5>
+                        <ul>
+                            <li>沉浸式学习法</li>
+                            <li>间隔重复记忆法</li>
+                            <li>输出驱动学习法</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 小王子章节列表 -->
+                <h4 class="mb-4">《小王子》章节学习</h4>
+                <div class="row" id="chapters-container">
+                    <!-- 章节1 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">第1章</span>
+                                    <small class="text-muted">基础篇</small>
+                                </div>
+                                <h5 class="card-title">飞行员与小王子的相遇</h5>
+                                <p class="card-text">讲述飞行员在撒哈拉沙漠迫降后遇到小王子的故事，学习描述性词汇和简单对话。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 章节2 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-success">第2章</span>
+                                    <small class="text-muted">基础篇</small>
+                                </div>
+                                <h5 class="card-title">小王子的星球</h5>
+                                <p class="card-text">介绍小王子居住的星球和他的日常生活，学习数字、日常活动相关词汇。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 章节3 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-info">第3章</span>
+                                    <small class="text-muted">进阶篇</small>
+                                </div>
+                                <h5 class="card-title">拜访其他星球</h5>
+                                <p class="card-text">小王子访问六个不同星球，遇见各种奇特人物，学习性格描述词汇。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 章节4 -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-warning">第4章</span>
+                                    <small class="text-muted">进阶篇</small>
+                                </div>
+                                <h5 class="card-title">地球上的玫瑰园</h5>
+                                <p class="card-text">小王子在地球上发现玫瑰园，理解爱与责任的含义，学习情感表达词汇。</p>
+                                <a href="#" class="btn btn-primary">开始学习</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习特色 -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5>《小王子》学习特色</h5>
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">📖</span>
+                                </div>
+                                <h6>经典文学</h6>
+                                <p class="small">世界名著，语言优美</p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">🎓</span>
+                                </div>
+                                <h6>教育意义</h6>
+                                <p class="small">寓教于乐，启发思考</p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">🔤</span>
+                                </div>
+                                <h6>词汇丰富</h6>
+                                <p class="small">涵盖多个主题词汇</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习建议 -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5>学习建议</h5>
+                        <p>通过《小王子》学习英语的建议：</p>
+                        <ol>
+                            <li><strong>分章节学习</strong> : 每天学习1-2个章节，循序渐进</li>
+                            <li><strong>角色扮演</strong> : 尝试朗读不同角色的对话，提高口语</li>
+                            <li><strong>词汇整理</strong> : 每章整理生词和短语，定期复习</li>
+                            <li><strong>主题讨论</strong> : 思考每章的寓意，用英语表达自己的想法</li>
+                            <li><strong>结合立信方法</strong> : 使用项目制学习法，每天翻译一段文本</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 您的公司名称. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">网站制作：您的公司</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

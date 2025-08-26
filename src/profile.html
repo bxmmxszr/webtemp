@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 立信英语</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">立信英语</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html#home">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services">服务</a></li>
+                    <li class="nav-item"><a class="nav-link" href="articles.html">文章</a></li>
+                    <li class="nav-item">
+                        <span id="user-info" class="navbar-text me-2 d-none"></span>
+                        <a href="profile.html" class="btn btn-outline-primary btn-sm me-1 d-none" id="profile-btn">个人中心</a>
+                        <a href="learning-records.html" class="btn btn-outline-info btn-sm me-1 d-none" id="records-btn">学习记录</a>
+                        <a href="admin-vocabulary.html" class="btn btn-outline-warning btn-sm me-1 d-none" id="admin-btn">管理员</a>
+                        <button id="login-btn" class="btn btn-outline-primary btn-sm me-1">登录</button>
+                        <button id="logout-btn" class="btn btn-outline-secondary btn-sm d-none">登出</button>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contact">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 个人中心内容 -->
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>个人中心</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action active" data-tab="profile">
+                            个人信息
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-tab="security">
+                            账户安全
+                        </a>
+                        <a href="learning-records.html" class="list-group-item list-group-item-action">
+                            学习记录
+                        </a>
+                        <a href="admin-vocabulary.html" class="list-group-item list-group-item-action">
+                            管理员功能
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="col-lg-9">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">个人信息</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="message" class="alert d-none" role="alert"></div>
+                        
+                        <!-- 个人信息标签页 -->
+                        <div id="profile-tab" class="tab-content">
+                            <form id="profileForm">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="userName" class="form-label">姓名</label>
+                                        <input type="text" class="form-control" id="userName" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="userEmail" class="form-label">邮箱地址</label>
+                                        <input type="email" class="form-control" id="userEmail" readonly>
+                                        <div class="form-text">邮箱地址不可更改</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="userPhone" class="form-label">手机号码</label>
+                                        <input type="tel" class="form-control" id="userPhone">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="userBirthday" class="form-label">出生日期</label>
+                                        <input type="date" class="form-control" id="userBirthday">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="userBio" class="form-label">个人简介</label>
+                                    <textarea class="form-control" id="userBio" rows="3" placeholder="简单介绍一下自己..."></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="userAvatar" class="form-label">头像</label>
+                                    <input type="file" class="form-control" id="userAvatar" accept="image/*">
+                                    <div class="form-text">支持 JPG、PNG 格式，大小不超过 2MB</div>
+                                    <div class="mt-2">
+                                        <img id="avatarPreview" src="https://via.placeholder.com/100x100/cccccc/ffffff?text=头像" alt="头像预览" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                                    <span id="saveBtnText">保存更改</span>
+                                    <span id="saveBtnLoading" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- 账户安全标签页 -->
+                        <div id="security-tab" class="tab-content d-none">
+                            <form id="securityForm">
+                                <div class="mb-3">
+                                    <label for="currentPassword" class="form-label">当前密码</label>
+                                    <input type="password" class="form-control" id="currentPassword" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">新密码</label>
+                                    <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                    <div class="form-text">密码至少6个字符</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">确认新密码</label>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary" id="changePasswordBtn">
+                                    <span id="changeBtnText">修改密码</span>
+                                    <span id="changeBtnLoading" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2024 立信英语. 保留所有权利.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">用心打造高效英语学习平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // --- 用户管理逻辑更新 ---
+        const USER_KEY = 'lixin_user';
+
+        // 获取 DOM 元素
+        const userInfo = document.getElementById('user-info');
+        const profileBtn = document.getElementById('profile-btn');
+        const recordsBtn = document.getElementById('records-btn');
+        const adminBtn = document.getElementById('admin-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // 检查后端存储中的用户状态
+        async function checkUserStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    // 验证token并获取用户信息
+                    const result = await apiService.getUserInfo();
+                    updateUIForUser(result.user);
+                    return result.user;
+                } catch (error) {
+                    console.error('Token验证失败:', error);
+                    // token无效，清除
+                    apiService.logout();
+                    updateUIForUser(null);
+                    return null;
+                }
+            } else {
+                updateUIForUser(null);
+                return null;
+            }
+        }
+
+        // 根据用户状态更新UI
+        function updateUIForUser(user) {
+            if (user) {
+                // 用户已登录
+                userInfo.textContent = `欢迎, ${user.name || user.email}`;
+                userInfo.classList.remove('d-none');
+                profileBtn.classList.remove('d-none');
+                recordsBtn.classList.remove('d-none');
+                adminBtn.classList.remove('d-none');
+                loginBtn.classList.add('d-none');
+                logoutBtn.classList.remove('d-none');
+
+                // 检查是否为管理员
+                const adminEmails = ['admin@example.com', 'admin@liuxinenglish.com'];
+                if (adminEmails.includes(user.email)) {
+                    adminBtn.classList.remove('d-none');
+                } else {
+                    adminBtn.classList.add('d-none');
+                }
+
+            } else {
+                // 用户未登录
+                userInfo.classList.add('d-none');
+                profileBtn.classList.add('d-none');
+                recordsBtn.classList.add('d-none');
+                adminBtn.classList.add('d-none');
+                loginBtn.classList.remove('d-none');
+                logoutBtn.classList.add('d-none');
+            }
+        }
+
+        // 登出按钮事件
+        logoutBtn.addEventListener('click', () => {
+            apiService.logout();
+            updateUIForUser(null); // 更新UI为未登录状态
+            location.reload(); // 刷新页面
+        });
+
+        // 登录按钮事件
+        loginBtn.addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+
+        // 标签页切换
+        document.querySelectorAll('[data-tab]').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 更新激活状态
+                document.querySelectorAll('[data-tab]').forEach(item => {
+                    item.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 显示对应内容
+                const tabName = this.getAttribute('data-tab');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('d-none');
+                });
+                document.getElementById(`${tabName}-tab`).classList.remove('d-none');
+            });
+        });
+
+        // 头像预览
+        document.getElementById('userAvatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 个人信息表单提交
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const userData = {
+                name: document.getElementById('userName').value,
+                phone: document.getElementById('userPhone').value,
+                birthday: document.getElementById('userBirthday').value,
+                bio: document.getElementById('userBio').value
+            };
+            
+            // 显示加载状态
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const saveBtnText = document.getElementById('saveBtnText');
+            const saveBtnLoading = document.getElementById('saveBtnLoading');
+            const messageDiv = document.getElementById('message');
+            
+            saveBtn.disabled = true;
+            saveBtnText.classList.add('d-none');
+            saveBtnLoading.classList.remove('d-none');
+            messageDiv.classList.add('d-none');
+            
+            try {
+                // 调用后端API更新用户信息
+                const result = await apiService.updateUserInfo(userData);
+                showMessage('个人信息更新成功！', 'success');
+            } catch (error) {
+                showMessage(error.message || '更新失败', 'danger');
+            } finally {
+                // 恢复按钮状态
+                saveBtn.disabled = false;
+                saveBtnText.classList.remove('d-none');
+                saveBtnLoading.classList.add('d-none');
+            }
+            
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.className = `alert alert-${type} d-block`;
+            }
+        });
+
+        // 修改密码表单提交
+        document.getElementById('securityForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const changeBtn = document.getElementById('changePasswordBtn');
+            const changeBtnText = document.getElementById('changeBtnText');
+            const changeBtnLoading = document.getElementById('changeBtnLoading');
+            const messageDiv = document.getElementById('message');
+            
+            // 验证密码
+            if (newPassword !== confirmPassword) {
+                showMessage('两次输入的密码不一致', 'danger');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showMessage('新密码至少需要6个字符', 'danger');
+                return;
+            }
+            
+            // 显示加载状态
+            changeBtn.disabled = true;
+            changeBtnText.classList.add('d-none');
+            changeBtnLoading.classList.remove('d-none');
+            messageDiv.classList.add('d-none');
+            
+            try {
+                // 调用后端API修改密码
+                const result = await apiService.changePassword(currentPassword, newPassword);
+                showMessage('密码修改成功！', 'success');
+                
+                // 清空表单
+                document.getElementById('securityForm').reset();
+            } catch (error) {
+                showMessage(error.message || '修改失败', 'danger');
+            } finally {
+                // 恢复按钮状态
+                changeBtn.disabled = false;
+                changeBtnText.classList.remove('d-none');
+                changeBtnLoading.classList.add('d-none');
+            }
+            
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.className = `alert alert-${type} d-block`;
+            }
+        });
+
+        // 页面加载时检查用户状态
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserStatus();
+        });
+    </script>
+</body>
+</html>
