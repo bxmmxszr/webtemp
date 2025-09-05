@@ -1,6 +1,25 @@
 // config/database.js
 const mongoose = require('mongoose');
 
+const mongoUri = process.env.MONGODB_URI;
+
+if (!mongoUri) {
+    console.error('❌ FATAL ERROR: MONGODB_URI 环境变量未定义！');
+    throw new Error('Missing MONGODB_URI environment variable');
+}
+
+console.log('✅ 正在尝试连接到 MongoDB Atlas...', mongoUri.replace(/\/\/.*@/, '//****:****@'));
+
+mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() => {
+    console.log('✅ 成功连接到 MongoDB Atlas!');
+}).catch((err) => {
+    console.error('❌ MongoDB 连接失败:', err);
+    console.error('❌ 错误详情:', err.stack);
+});
+
 // 数据库连接配置
 const dbConfig = {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/english_learning',
