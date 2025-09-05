@@ -1,5 +1,10 @@
 // server.js
+// 1. 加载环境变量
+require('dotenv').config();
+
+// 2. 函数声明
 const express = require('express');
+const router = express.Router();
 const serverless = require('serverless-http');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
@@ -7,25 +12,168 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
-const os = require('os'); // 添加 os 模块
+const os = require('os');
 
-require('dotenv').config();
 
-// 加载路由
-const userRoutes = require('./users');
-const quizRecordRoutes = require('./quizRecordRoutes');
- 
-// 注册路由
-app.use('/api/users', userRoutes);
-app.use('/api/quiz', quizRecordRoutes);
+// 3. 创建 Express 应用实例
+const app = express();
+
+// 4. 然后定义所有中间件
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 提供 public 目录下的静态文件 (例如 index.html)
+app.use(express.static(path.join(__dirname, '..', 'public')));
+// 提供 src 目录下的静态文件 (例如 1.html, a.html)
+app.use(express.static(path.join(__dirname, '..', 'src')));
+
+// 5. 然后定义静态文件服务
+app.use('/uploads', express.static('uploads'));
+app.use('/exports', express.static('exports'));
+//app.use(express.static(path.join(__dirname, '..', 'public'))); // 提供 public 目录下的静态文件
+app.use(express.static(path.join(__dirname, '..', 'public')));
+// 提供 src 目录下的静态文件 (例如 1.html, a.html)
+app.use(express.static(path.join(__dirname, '..', 'src')));
+
+console.log(path.join(__dirname, '..', 'public'));
+
+// （可选）如果你还想保留提供 functions 目录下某些静态文件的能力（虽然不常见），可以保留原来的，但通常不需要
+//app.use(express.static('.')); // 服务静态HTML文件
+
+
+// 6. 然后连接数据库
+// 连接MongoDB数据库
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/english_learning');
+// 数据库连接状态监听
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB连接错误:'));
+db.once('open', () => {
+  console.log('✅ MongoDB数据库连接成功');
+});
+
+
+// 7. 然后定义所有数据模型 (Schema 和 Model)
+// --- 引入并定义所有需要的模型 ---
+// 确保这些模型文件路径正确，并且内部正确地导出了 Mongoose 模型
+const User = require('./models/User');
+const LearningRecord = require('./models/LearningRecord');
+const Vocabulary = require('./models/Vocabulary'); // 确保这个模型文件存在
+const CoreVocabulary = require('./models/CoreVocabulary'); // 确保这个模型文件存在
+const UserVocabularyRecord = require('./models/UserVocabularyRecord');
+const QuizRecord = require('./models/QuizRecord');
+const IncorrectWord = require('./models/IncorrectWord');
+const Passage = require('./models/Passage');
+const TranslationRecord = require('./models/TranslationRecord'); 
+
+
+// 如果有在路由中直接使用但未在 server.js 顶级作用域使用的模型，也需要引入确保 Mongoose 知道它们的存在
+// require('./models/SomeOtherModel');
+
+
+// 8. 然后定义所有工具函数 (例如中间件)
+// JWT认证中间件
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
+  if (!token) {
+    return res.status(401).json({ success: false, error: '访问令牌缺失' });
+  }
+  // 使用 server.js 中设置的环境变量
+  jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_here_change_this', (err, decodedPayload) => {
+    if (err) {
+        return res.status(403).json({ success: false, error: '令牌无效' });
+    }
+    // 确保 req.user 结构清晰
+    req.user = {
+        userId: decodedPayload.userId || decodedPayload.id || decodedPayload._id,
+        email: decodedPayload.email
+    };
+    next();
+  });
+}
+
+// 管理员权限检查中间件
+function requireAdmin(req, res, next) {
+  const adminEmailsString = process.env.ADMIN_EMAILS || 'admin@example.com';
+  const adminEmails = adminEmailsString.split(',').map(email => email.trim());
+  // --- 添加调试日志 ---
+  // console.log("DEBUG requireAdmin: Checking user", req.user, "against admins", adminEmails);
+  // --- 添加调试日志结束 ---
+  if (req.user && req.user.email && adminEmails.includes(req.user.email)) {
+    next();
+  } else {
+    console.warn(`用户 ${req.user?.email || 'Unknown'} 尝试访问管理员资源被拒绝。`);
+    res.status(403).json({ success: false, error: '需要管理员权限' });
+  }
+}
+
+// 导入multer用于文件上传
+const multer = require('multer');
+
+// 配置文件上传 (multer)
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'vocabulary-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('只允许上传CSV文件'));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB限制
+  }
+});
+
+
+// 9. 导入所有路由模块 (在 app 和中间件定义之后)
+// 注意：确保这些路由文件的路径是正确的，并且它们会正确使用上面定义的中间件（如 authenticateToken）
+// 如果这些是独立的路由文件，它们内部应该使用 `express.Router()`
+const userRoutes = require('./users'); // 确保路径正确
+const quizRecordRoutes = require('./quizRecordRoutes'); // 确保路径正确
+const passageRoutes = require('./passageRoutes'); // 确保路径正确
+
+// 10. 最后注册所有路由 (在 app, 中间件, 和路由模块都定义之后)
+// 注册 API 路由
+app.use('/api/users', userRoutes); // 使用导入的路由
+app.use('/api/quiz', quizRecordRoutes); // 使用导入的路由
+app.use('/api/passage', passageRoutes); // 使用导入的路由
+
+// 11. 定义直接在 server.js 中的路由 (如果有的话)
+// 健康检查
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    service: 'English Learning Platform API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// // 加载路由
+// const userRoutes = require('./users');
+// const quizRecordRoutes = require('./quizRecordRoutes');
+
 
 // 导入CSV处理库
 const csv = require('csv-parser');
 const { createObjectCsvWriter } = require('csv-writer');
 
-// 导入multer用于文件上传
-const multer = require('multer');
-const app = express();
 
 // --- 修改: 将默认端口改为 5000 以避免与前端开发服务器冲突 ---
 //const PORT = process.env.PORT || 5000;
@@ -34,7 +182,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_here_change_th
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-
+console.log('[SERVER] Using DEEPSEEK_API_KEY (first 5 chars for debug):', DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.substring(0, 5) + '...' : 'NOT SET');
 
 //const User = require('./models/User'); // 如果需要获取用户ID等，但不导出基本信息
 //const LearningRecord = require('./models/LearningRecord');
@@ -43,29 +191,25 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 //const QuizRecord = require('./models/QuizRecord'); // 确保此模型已定义
 //const IncorrectWord = require('./models/IncorrectWord');
 
-// --- 引入所有需要在路由中直接使用的模型 ---
-const User = require('./models/User');
-const LearningRecord = require('./models/LearningRecord');
-//const Vocabulary = require('./models/Vocabulary');
-//const CoreVocabulary = require('./models/CoreVocabulary'); // 确保引入 CoreVocabulary
-const UserVocabularyRecord = require('./models/UserVocabularyRecord');
-const QuizRecord = require('./models/QuizRecord');
-const IncorrectWord = require('./models/IncorrectWord');
-const Passage = require('./models/Passage'); // 引入 Passage 模型
+//// --- 引入所有需要在路由中直接使用的模型 ---
+//const User = require('./models/User');
+//const LearningRecord = require('./models/LearningRecord');
+////const Vocabulary = require('./models/Vocabulary');
+////const CoreVocabulary = require('./models/CoreVocabulary'); // 确保引入 CoreVocabulary
+//const UserVocabularyRecord = require('./models/UserVocabularyRecord');
+//const QuizRecord = require('./models/QuizRecord');
+//const IncorrectWord = require('./models/IncorrectWord');
+//const Passage = require('./models/Passage'); // 引入 Passage 模型
+
 // --- 模型引入结束 ---
 // 引入模型，让 Mongoose 知道这些模型的存在
 require('./models/Passage'); // 确保引入了 Passage
+ 
+// // 注册路由
+// app.use('/api/users', userRoutes);
+// app.use('/api/quiz', quizRecordRoutes);
 
 
-// 中间件
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// 静态文件服务
-app.use('/uploads', express.static('uploads'));
-app.use('/exports', express.static('exports'));
-app.use(express.static('.')); // 服务静态HTML文件
 
 // ========== 添加: 引入并使用路由文件 ========== //
 // 引入路由文件
@@ -73,8 +217,8 @@ app.use(express.static('.')); // 服务静态HTML文件
 //const passageRoutes = require('./routes/passageRoutes'); // 请确保路径正确
 //app.use('/api/passages', passageRoutes);
 
-const passageRoutes = require('./passageRoutes');
-app.use('/api/passage', passageRoutes);
+//const passageRoutes = require('./passageRoutes');
+//app.use('/api/passage', passageRoutes);
 // 如果有其他路由文件，也以同样方式引入
 // ========== 路由引入结束 ========== //
 
@@ -88,14 +232,6 @@ require('./models/Passage');
 // require('./models/CoreVocabulary');
 
 
-// 连接MongoDB数据库
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/english_learning');
-// 数据库连接状态监听
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB连接错误:'));
-db.once('open', () => {
-  console.log('✅ MongoDB数据库连接成功');
-});
 
 
 // ========== 数据模型 ==========
@@ -144,7 +280,7 @@ const vocabularySchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-const Vocabulary = mongoose.model('Vocabulary', vocabularySchema); // 模型名 'Vocabulary'
+//const Vocabulary = mongoose.model('Vocabulary', vocabularySchema); // 模型名 'Vocabulary'
 
 //const Vocabulary = mongoose.model('Vocabulary', vocabularySchema);
 
@@ -168,7 +304,7 @@ const coreVocabularySchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-const CoreVocabulary = mongoose.model('CoreVocabulary', coreVocabularySchema);
+//const CoreVocabulary = mongoose.model('CoreVocabulary', coreVocabularySchema);
 
 // 用户词汇学习记录模型
 const userVocabularyRecordSchema = new mongoose.Schema({
@@ -274,34 +410,34 @@ const quizRecordSchema = new mongoose.Schema({
 //const QuizRecord = mongoose.model('QuizRecord', quizRecordSchema);
 
 
-// 配置文件上传
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'vocabulary-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// // 配置文件上传
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         const uploadDir = 'uploads/';
+//         if (!fs.existsSync(uploadDir)) {
+//             fs.mkdirSync(uploadDir, { recursive: true });
+//         }
+//         cb(null, uploadDir);
+//     },
+//     filename: function (req, file, cb) {
+//         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//         cb(null, 'vocabulary-' + uniqueSuffix + path.extname(file.originalname));
+//     }
+// });
 
-const upload = multer({ 
-    storage: storage,
-    fileFilter: function (req, file, cb) {
-        if (file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel' || file.originalname.endsWith('.csv')) {
-            cb(null, true);
-        } else {
-            cb(new Error('只允许上传CSV文件'));
-        }
-    },
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB限制
-    }
-});
+// const upload = multer({ 
+//     storage: storage,
+//     fileFilter: function (req, file, cb) {
+//         if (file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel' || file.originalname.endsWith('.csv')) {
+//             cb(null, true);
+//         } else {
+//             cb(new Error('只允许上传CSV文件'));
+//         }
+//     },
+//     limits: {
+//         fileSize: 5 * 1024 * 1024 // 5MB限制
+//     }
+// });
 
 // ========== 中间件 ==========
 
@@ -328,31 +464,32 @@ const upload = multer({
 //        next();
 //    });
 //}
-// server.js 中的 authenticateToken 中间件
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
 
-    if (!token) {
-        return res.status(401).json({ success: false, error: '访问令牌缺失' });
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, decodedPayload) => { // 使用 decodedPayload 避免混淆
-        if (err) {
-            return res.status(403).json({ success: false, error: '令牌无效' });
-        }
-
-        // --- 修改点：明确构造 req.user 对象 ---
-        // 确保无论 payload 里是 id 还是 userId，都统一到 req.user.userId
-        req.user = {
-            userId: decodedPayload.userId || decodedPayload.id || decodedPayload._id // 根据实际签发的 payload 调整
-        };
-        // 如果 payload 里还有其他你需要的字段，也可以加进来
-        req.user.email = decodedPayload.email;
-
-        next();
-    });
-}
+// // server.js 中的 authenticateToken 中间件
+// function authenticateToken(req, res, next) {
+//     const authHeader = req.headers['authorization'];
+//     const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
+// 
+//     if (!token) {
+//         return res.status(401).json({ success: false, error: '访问令牌缺失' });
+//     }
+// 
+//     jwt.verify(token, JWT_SECRET, (err, decodedPayload) => { // 使用 decodedPayload 避免混淆
+//         if (err) {
+//             return res.status(403).json({ success: false, error: '令牌无效' });
+//         }
+// 
+//         // --- 修改点：明确构造 req.user 对象 ---
+//         // 确保无论 payload 里是 id 还是 userId，都统一到 req.user.userId
+//         req.user = {
+//             userId: decodedPayload.userId || decodedPayload.id || decodedPayload._id // 根据实际签发的 payload 调整
+//         };
+//         // 如果 payload 里还有其他你需要的字段，也可以加进来
+//         req.user.email = decodedPayload.email;
+// 
+//         next();
+//     });
+// }
 
 
 // 管理员权限检查中间件
@@ -367,25 +504,25 @@ function authenticateToken(req, res, next) {
 //    next();
 //}
 
-// server.js
-function requireAdmin(req, res, next) {
-    // 从环境变量或默认值获取管理员邮箱列表
-    const adminEmailsString = process.env.ADMIN_EMAILS || 'admin@example.com';
-    const adminEmails = adminEmailsString.split(',').map(email => email.trim());
-    
-	// --- 添加调试日志 ---
-    console.log("DEBUG requireAdmin: Checking user", req.user, "against admins", adminEmails);
-    // --- 添加调试日志结束 ---
-	
-    // 检查 req.user 是否存在，其 email 是否在管理员列表中
-    if (req.user && req.user.email && adminEmails.includes(req.user.email)) {
-        next(); // 是管理员，继续
-    } else {
-        // 不是管理员，拒绝访问
-        console.warn(`用户 ${req.user?.email || 'Unknown'} 尝试访问管理员资源被拒绝。`);
-        res.status(403).json({ success: false, error: '需要管理员权限' });
-    }
-}
+// // server.js
+// function requireAdmin(req, res, next) {
+//     // 从环境变量或默认值获取管理员邮箱列表
+//     const adminEmailsString = process.env.ADMIN_EMAILS || 'admin@example.com';
+//     const adminEmails = adminEmailsString.split(',').map(email => email.trim());
+//     
+// 	// --- 添加调试日志 ---
+//     console.log("DEBUG requireAdmin: Checking user", req.user, "against admins", adminEmails);
+//     // --- 添加调试日志结束 ---
+// 	
+//     // 检查 req.user 是否存在，其 email 是否在管理员列表中
+//     if (req.user && req.user.email && adminEmails.includes(req.user.email)) {
+//         next(); // 是管理员，继续
+//     } else {
+//         // 不是管理员，拒绝访问
+//         console.warn(`用户 ${req.user?.email || 'Unknown'} 尝试访问管理员资源被拒绝。`);
+//         res.status(403).json({ success: false, error: '需要管理员权限' });
+//     }
+// }
 
 //// 管理员权限检查中间件
 //function requireAdmin(req, res, next) {
@@ -399,32 +536,144 @@ function requireAdmin(req, res, next) {
 
 // 管理员权限检查中间件
 function requireAdmin(req, res, next) {
-    const adminEmailsString = process.env.ADMIN_EMAILS || 'admin@example.com';
+    // 从环境变量或默认值获取管理员邮箱列表
+	const adminEmailsString = process.env.ADMIN_EMAILS || 'admin@example.com';
     const adminEmails = adminEmailsString.split(',').map(email => email.trim());
 
-    if (req.user && req.user.email && adminEmails.includes(req.user.email)) {
-        next();
+    // 检查 req.user 是否存在，其 email 是否在管理员列表中
+	if (req.user && req.user.email && adminEmails.includes(req.user.email)) {
+        next();  // 是管理员，继续
     } else {
-        console.warn(`用户 ${req.user?.email || 'Unknown'} 尝试访问管理员资源被拒绝。`);
+        // 不是管理员，拒绝访问
+		console.warn(`用户 ${req.user?.email || 'Unknown'} 尝试访问管理员资源被拒绝。`);
         res.status(403).json({ success: false, error: '需要管理员权限' });
     }
 }
 
+
+module.exports = {
+    handler: serverless(app), // 原有的导出
+    requireAdmin: requireAdmin // 新增导出 requireAdmin
+};
+
 // ========== API路由 ==========
 
-// 健康检查
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        success: true,
-        service: 'English Learning Platform API',
-        version: '1.0.0',
-        timestamp: new Date().toISOString()
-    });
+// --- 更新用户信息 (管理员) ---
+// @desc    更新用户信息
+// @route   PUT /api/admin/users/:id
+// @access  Private/Admin
+app.put('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log(`[ADMIN] ${req.user.email} 请求更新用户 ID: ${req.params.id}`);
+        const userId = req.params.id;
+        const updates = req.body; // { name, password, phone, bio, ... }
+
+        // 防止修改邮箱和 _id
+        delete updates.email;
+        delete updates._id;
+
+        // 如果提供了新密码，需要加密
+        if (updates.password) {
+            updates.password = await bcrypt.hash(updates.password, 12);
+        }
+
+        // 使用 findByIdAndUpdate 并返回更新后的文档
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: updates },
+            { new: true, runValidators: true } // new: true 返回更新后的文档, runValidators: true 运行 schema 验证
+        ).select('-password'); // 不返回密码
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, error: '用户未找到' });
+        }
+
+        console.log(`[ADMIN] 用户 ID ${userId} 更新成功`);
+        res.json({
+            success: true,
+            message: '用户信息更新成功',
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error(`[ADMIN] 更新用户 ID ${req.params.id} 失败:`, error);
+        // 处理 Mongoose 验证错误
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({ success: false, error: messages.join(', ') });
+        }
+        // 处理其他错误
+        res.status(500).json({ success: false, error: '更新用户信息失败: ' + error.message });
+    }
 });
+
+
+// --- 删除用户 (管理员) ---
+// @desc    删除用户
+// @route   DELETE /api/admin/users/:id
+// @access  Private/Admin
+app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log(`[ADMIN] ${req.user.email} 请求删除用户 ID: ${req.params.id}`);
+        const userId = req.params.id;
+
+        // 使用 findByIdAndDelete
+        const deletedUser = await User.findByIdAndDelete(userId);
+
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, error: '用户未找到' });
+        }
+
+        console.log(`[ADMIN] 用户 ID ${userId} (${deletedUser.email}) 删除成功`);
+        res.json({
+            success: true,
+            message: `用户 ${deletedUser.email} 删除成功`
+        });
+
+    } catch (error) {
+        console.error(`[ADMIN] 删除用户 ID ${req.params.id} 失败:`, error);
+        res.status(500).json({ success: false, error: '删除用户失败: ' + error.message });
+    }
+});
+
+
+// // 健康检查
+// app.get('/api/health', (req, res) => {
+//     res.json({ 
+//         success: true,
+//         service: 'English Learning Platform API',
+//         version: '1.0.0',
+//         timestamp: new Date().toISOString()
+//     });
+// });
+
+
+
+// async login(email, password) {
+//     console.log('[api.js DEBUG] 开始登录请求...');
+//     const response = await this.request('/login', {
+//         method: 'POST',
+//         body: JSON.stringify({ email, password })
+//     });
+//     console.log('[api.js DEBUG] 收到登录响应:', response);
+//     if (response.success) {
+//         // --- 关键：确认这里是否正确执行 ---
+//         console.log('[api.js DEBUG] 登录成功，准备存储 Token:', response.token);
+//         this.setToken(response.token);
+//         localStorage.setItem('lixin_user', JSON.stringify(response.user));
+//         console.log('[api.js DEBUG] Token 和用户信息存储完成');
+//         // --- 关键结束 ---
+//         return response;
+//     }
+//     return response;
+// }
+
+
 
 // 用户注册
 app.post('/api/register', async (req, res) => {
-    try {
+    console.log('✅ 接收到注册请求:', req.body); // 记录请求数据
+	try {
         const { email, password, name } = req.body;
         
         // 验证输入
@@ -436,7 +685,8 @@ app.post('/api/register', async (req, res) => {
         }
         
         // 检查用户是否已存在
-        const existingUser = await User.findOne({ email });
+        console.log('✅ 正在检查邮箱是否已存在...');
+		const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ 
                 success: false,
@@ -448,7 +698,8 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         // 创建新用户
-        const newUser = new User({
+        console.log('✅ 正在创建新用户...');
+		const newUser = new User({
             email,
             password: hashedPassword,
             name,
@@ -456,7 +707,8 @@ app.post('/api/register', async (req, res) => {
         });
         
         await newUser.save();
-        
+        console.log('✅ 用户注册成功:', newUser._id);
+		
         res.status(201).json({ 
             success: true,
             message: '注册成功', 
@@ -467,81 +719,83 @@ app.post('/api/register', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('注册错误:', error);
-        res.status(500).json({ 
+        console.error('❌ 注册过程发生错误:', error.message);
+        console.error('❌ 错误堆栈:', error.stack);
+		
+		res.status(500).json({ 
             success: false,
             error: '服务器错误' 
         });
     }
 });
 
-//// 用户登录
-//app.post('/api/login', async (req, res) => {
-//    try {
-//        const { email, password } = req.body;
-//        
-//        // 验证输入
-//        if (!email || !password) {
-//            return res.status(400).json({ 
-//                success: false,
-//                error: '请填写邮箱和密码' 
-//            });
-//        }
-//        
-//        // 查找用户
-//        const user = await User.findOne({ email });
-//        if (!user) {
-//            return res.status(400).json({ 
-//                success: false,
-//                error: '用户不存在' 
-//            });
-//        }
-//        
-//        // 验证密码
-//        const isValidPassword = await bcrypt.compare(password, user.password);
-//        if (!isValidPassword) {
-//            return res.status(400).json({ 
-//                success: false,
-//                error: '密码错误' 
-//            });
-//        }
-//        
-//        // 更新最后登录时间
-//        user.lastLogin = new Date();
-//        await user.save();
-//        
-//        // 生成JWT token
-//        const token = jwt.sign(
-//            { 
-//                userId: user._id, 
-//                email: user.email,
-//                name: user.name
-//            }, 
-//            JWT_SECRET, 
-//            { expiresIn: '24h' }
-//        );
-//        
-//        res.json({ 
-//            success: true,
-//            message: '登录成功', 
-//            token,
-//            user: { 
-//                id: user._id, 
-//                email: user.email, 
-//                name: user.name,
-//                phone: user.phone,
-//                birthday: user.birthday,
-//                bio: user.bio
-//            }
-//        });
-//    } catch (error) {
-//        console.error('登录错误:', error);
-//        res.status(500).json({ 
-//            success: false,
-//            error: '服务器错误' 
-//        });
-//    }
-//});
+// 用户登录
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // 验证输入
+        if (!email || !password) {
+            return res.status(400).json({ 
+                success: false,
+                error: '请填写邮箱和密码' 
+            });
+        }
+        
+        // 查找用户
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ 
+                success: false,
+                error: '用户不存在' 
+            });
+        }
+        
+        // 验证密码
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ 
+                success: false,
+                error: '密码错误' 
+            });
+        }
+        
+        // 更新最后登录时间
+        user.lastLogin = new Date();
+        await user.save();
+        
+        // 生成JWT token
+        const token = jwt.sign(
+            { 
+                userId: user._id, 
+                email: user.email,
+                name: user.name
+            }, 
+            JWT_SECRET, 
+            { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+            success: true,
+            message: '登录成功', 
+            token,
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                name: user.name,
+                phone: user.phone,
+                birthday: user.birthday,
+                bio: user.bio
+            }
+        });
+    } catch (error) {
+        console.error('登录错误:', error);
+        res.status(500).json({ 
+            success: false,
+            error: '服务器错误' 
+        });
+    }
+});
 
 // 获取用户信息
 app.get('/api/user', authenticateToken, async (req, res) => {
@@ -576,57 +830,57 @@ app.get('/api/user', authenticateToken, async (req, res) => {
     }
 });
 
-// 获取用户信息
-// server.js 中的登录路由
-app.post('/api/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        // 1. 查找用户
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ success: false, error: '邮箱或密码错误' });
-        }
-
-        // 2. 验证密码
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ success: false, error: '邮箱或密码错误' });
-        }
-
-        // 3. 准备 JWT payload - *** 关键检查点 ***
-        // 确保这里的字段名是 'userId'
-        const payload = {
-            userId: user._id, // <--- 确保是 userId
-            email: user.email
-            // 可以包含其他非敏感信息
-        };
-
-        // 4. 签发 token
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
-
-        // 5. 更新最后登录时间 (可选)
-        user.lastLogin = Date.now();
-        await user.save();
-
-        // 6. 返回成功响应
-        res.json({
-            success: true,
-            message: '登录成功',
-            token: token, // 将 token 发送给前端
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name
-                // ... 其他用户信息
-            }
-        });
-
-    } catch (error) {
-        console.error('登录错误:', error);
-        res.status(500).json({ success: false, error: '服务器内部错误' });
-    }
-});
+//// 获取用户信息
+//// server.js 中的登录路由
+//app.post('/api/login', async (req, res) => {
+//    try {
+//        const { email, password } = req.body;
+//
+//        // 1. 查找用户
+//        const user = await User.findOne({ email });
+//        if (!user) {
+//            return res.status(400).json({ success: false, error: '邮箱或密码错误' });
+//        }
+//
+//        // 2. 验证密码
+//        const isMatch = await bcrypt.compare(password, user.password);
+//        if (!isMatch) {
+//            return res.status(400).json({ success: false, error: '邮箱或密码错误' });
+//        }
+//
+//        // 3. 准备 JWT payload - * 关键检查点 *
+//        // 确保这里的字段名是 'userId'
+//        const payload = {
+//            userId: user._id, // <--- 确保是 userId
+//            email: user.email
+//            // 可以包含其他非敏感信息
+//        };
+//
+//        // 4. 签发 token
+//        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+//
+//        // 5. 更新最后登录时间 (可选)
+//        user.lastLogin = Date.now();
+//        await user.save();
+//
+//        // 6. 返回成功响应
+//        res.json({
+//            success: true,
+//            message: '登录成功',
+//            token: token, // 将 token 发送给前端
+//            user: {
+//                id: user._id,
+//                email: user.email,
+//                name: user.name
+//                // ... 其他用户信息
+//            }
+//        });
+//
+//    } catch (error) {
+//        console.error('登录错误:', error);
+//        res.status(500).json({ success: false, error: '服务器内部错误' });
+//    }
+//});
 
 // 更新用户信息
 app.put('/api/user', authenticateToken, async (req, res) => {
@@ -1965,87 +2219,129 @@ app.get('/api/data-export/json', authenticateToken, async (req, res) => {
     }
 });
 
-//-- // ========== 翻译记录模型 API 路由 ========== //
-//-- const translationRecordSchema = new mongoose.Schema({
-//--     userId: { type: String, required: true, index: true }, // 关联用户
-//--     passageId: { type: String, required: true }, // 关联短文ID
-//--     sentence: { type: String, required: true }, // 英文原句
-//--     userTranslation: { type: String, required: true }, // 用户翻译
-//--     aiTranslation: { type: String, required: true }, // AI翻译
-//--     createdAt: { type: Date, default: Date.now } // 记录创建时间
-//-- });
-//-- 
-//-- const TranslationRecord = mongoose.model('TranslationRecord', translationRecordSchema);
-//-- 
-//-- 
-//-- // --- 保存翻译记录 API ---
-//-- app.post('/api/translation-records', authenticateToken, async (req, res) => {
-//--     try {
-//--         const { passageId, sentence, userTranslation, aiTranslation } = req.body;
-//-- 
-//--         // 基本验证
-//--         if (!passageId || !sentence || !userTranslation || !aiTranslation) {
-//--              return res.status(400).json({ success: false, error: '缺少必要字段: passageId, sentence, userTranslation, aiTranslation' });
-//--         }
-//-- 
-//--         // 创建新的翻译记录
-//--         const newRecord = new TranslationRecord({
-//--             userId: req.user.userId, // 从认证中间件获取
-//--             passageId,
-//--             sentence,
-//--             userTranslation,
-//--             aiTranslation
-//--         });
-//-- 
-//--         // 保存到数据库
-//--         await newRecord.save();
-//-- 
-//--         res.status(201).json({ success: true, message: '翻译记录保存成功', record: newRecord });
-//--     } catch (error) {
-//--         console.error('保存翻译记录失败:', error);
-//--         res.status(500).json({ success: false, error: '服务器内部错误' });
-//--     }
-//-- });
-//-- 
-//-- 
-//-- // --- 获取用户翻译记录 API ---
-//-- app.get('/api/translation-records', authenticateToken, async (req, res) => {
-//--     try {
-//--         // 获取当前用户的所有翻译记录，并按创建时间倒序排列
-//--         const records = await TranslationRecord.find({ userId: req.user.userId })
-//--                                                  .sort({ createdAt: -1 }); // 最新的在前
-//-- 
-//--         res.json({ success: true, records });
-//--     } catch (error) {
-//--         console.error('获取翻译记录失败:', error);
-//--         res.status(500).json({ success: false, error: '服务器内部错误' });
-//--     }
-//-- });
-
-// ========== 翻译记录模型 API 路由 ========== //
-// 1. 在模型定义区域添加 TranslationRecord 模型
-const translationRecordSchema = new mongoose.Schema({
-    userId: { type: String, required: true, index: true }, // 关联用户
-    passageId: { type: String, required: true }, // 关联短文ID
-    sentence: { type: String, required: true }, // 英文原句
-    userTranslation: { type: String, required: true }, // 用户翻译
-    aiTranslation: { type: String, required: true }, // AI翻译
-    createdAt: { type: Date, default: Date.now } // 记录创建时间
-});
-const TranslationRecord = mongoose.model('TranslationRecord', translationRecordSchema);
-
 // 2. 在 API 路由区域添加 POST 和 GET 路由
 // 保存翻译记录 API
 app.post('/api/translation-records', authenticateToken, async (req, res) => {
-    console.log("[DEBUG] POST /api/translation-records called"); // <-- 添加
-    console.log("[DEBUG] req.user (from authenticateToken):", req.user); // <-- 添加
-    
+    console.log("[DEBUG] POST /api/translation-records called"); 
+    console.log("[DEBUG] req.user (from authenticateToken):", req.user); 
+	
 	try {
         const { passageId, sentence, userTranslation, aiTranslation } = req.body;
-		console.log("[DEBUG] Request body received:", { passageId, sentence, userTranslation, aiTranslation }); // <-- 添加
+		console.log("[DEBUG] Request body received:", { passageId, sentence, userTranslation, aiTranslation }); 
 
+		// 计算 AI 翻译与用户翻译的对比评分
+		function calculateScore(aiTranslation, userTranslation) {
+			//// 1. 基本清理：去除标点符号，只保留中文字符和空格
+			const cleanAi = aiTranslation.replace(/[^\u4e00-\u9fa5\s]/g, '').trim(); // 清理 AI 翻译
+			const cleanUser = userTranslation.replace(/[^\u4e00-\u9fa5\s]/g, '').trim(); // 清理用户翻译
 
-        // 基本验证
+			// 2. 处理空字符串或清理后为空的情况
+			if (!cleanAi && !cleanUser) {
+				return 10; 
+			}
+			if (!cleanAi || !cleanUser) {
+				return 0; 
+			}
+			
+			// 3. 将清理后的文本按字符拆分为数组
+			const aiChars = cleanAi.split('');
+			const userChars = cleanUser.split('');
+			
+			// 4. 使用更精确的字符串相似度算法 - Jaro-Winkler (修正版)
+			function jaroWinklerDistance(s1, s2) {
+				const len1 = s1.length;
+				const len2 = s2.length;
+		
+				if (len1 === 0 && len2 === 0) return 1.0;
+				if (len1 === 0 || len2 === 0) return 0.0;
+		
+				const matchWindow = Math.floor(Math.max(len1, len2) / 2) - 1;
+				const matchWindowAdjusted = Math.max(matchWindow, 0); // Ensure non-negative
+		
+				const s1Matches = new Array(len1).fill(false);
+				const s2Matches = new Array(len2).fill(false);
+				let matches = 0;
+		
+				// Find matches
+				for (let i = 0; i < len1; i++) {
+					const start = Math.max(0, i - matchWindowAdjusted);
+					const end = Math.min(i + matchWindowAdjusted + 1, len2);
+		
+					for (let j = start; j < end; j++) {
+						if (s1Matches[i] || s2Matches[j]) continue;
+						if (s1[i] === s2[j]) {
+							s1Matches[i] = true;
+							s2Matches[j] = true;
+							matches++;
+							break;
+						}
+					}
+				}
+		
+				if (matches === 0) return 0.0;
+		
+				// Count transpositions
+				let transpositions = 0;
+				let k = 0;
+				for (let i = 0; i < len1; i++) {
+					if (!s1Matches[i]) continue;
+					while (!s2Matches[k]) k++;
+					if (s1[i] !== s2[k]) transpositions++;
+					k++;
+				}
+				transpositions /= 2.0; // Each transposition involves two characters
+		
+				// Calculate Jaro Similarity
+				const jaro =
+					(matches / len1 +
+					matches / len2 +
+					(matches - transpositions) / matches) /
+					3.0;
+		
+				// Calculate common prefix up to 4 characters
+				let prefix = 0;
+				for (let i = 0; i < Math.min(len1, len2, 4); i++) {
+					if (s1[i] === s2[i]) {
+						prefix++;
+					} else {
+						break;
+					}
+				}
+		
+				// Calculate Jaro-Winkler Similarity
+				// Standard scaling factor p = 0.1
+				const jaroWinkler = jaro + 0.1 * prefix * (1 - jaro);
+		
+				return jaroWinkler;
+			}
+		
+			// 5. 计算 Jaro-Winkler 相似度 (使用清理后的字符串)
+			const similarityRatio = jaroWinklerDistance(cleanAi, cleanUser);
+			console.log(`[DEBUG] Calculating score for AI: "${cleanAi}" vs User: "${cleanUser}". Similarity Ratio: ${similarityRatio.toFixed(4)}`); // Add debug log
+		
+			// 6. 根据相似度映射到 0-10 分 (调整阈值以适应中文)
+			let score = 0;
+			if (similarityRatio >= 0.95) {
+				score = 10; // 完美匹配
+			} else if (similarityRatio >= 0.90) { // 降低阈值
+				score = 9; // 极近完美
+			} else if (similarityRatio >= 0.80) { // 降低阈值
+				score = 8; // 非常好
+			} else if (similarityRatio >= 0.70) { // 降低阈值
+				score = 7; // 好
+			} else if (similarityRatio >= 0.60) { // 降低阈值
+				score = 6; // 一般
+			} else if (similarityRatio >= 0.50) { // 降低阈值
+				score = 5; // 差
+			} else {
+				score = Math.max(0, Math.round(similarityRatio * 10)); // 对于很低的相似度，给一个基于比例的分数，但不低于0
+			}
+			
+			console.log(`[DEBUG] Final calculated score: ${score}`);
+			return score;
+		}
+
+		// 基本验证
         if (!passageId || !sentence || !userTranslation || !aiTranslation) {
              return res.status(400).json({ success: false, error: '缺少必要字段: passageId, sentence, userTranslation, aiTranslation' });
         }
@@ -2059,18 +2355,19 @@ app.post('/api/translation-records', authenticateToken, async (req, res) => {
             aiTranslation
         });
 		
-		console.log("[DEBUG] New TranslationRecord object created:", newRecord.toObject()); // <-- 添加 (可选，信息量大)
+		console.log("[DEBUG] New TranslationRecord object created:", newRecord.toObject()); // <--  (可选，信息量大)
 
-
-        // 保存到数据库
-		console.log("[DEBUG] About to save new record to database"); // <-- 添加
-        await newRecord.save();
-        console.log("[DEBUG] Record saved successfully"); // <-- 添加
-
+		// --- 计算评分 ---
+        newRecord.score = calculateScore(newRecord.aiTranslation, newRecord.userTranslation); // 计算并设置评分
+        console.log("[DEBUG] New TranslationRecord object created with score:", newRecord.score);
+        await newRecord.save();    // 保存到数据库
+        console.log("[DEBUG] Record saved successfully");
+        
         res.status(201).json({ success: true, message: '翻译记录保存成功', record: newRecord });
+
     } catch (error) {
         console.error('保存翻译记录失败:', error);
-		console.error('[DEBUG] Error occurred while saving translation record:', error); // <-- 修改
+		console.error('[DEBUG] Error occurred while saving translation record:', error); 
         
         res.status(500).json({ success: false, error: '服务器内部错误' });
     }
@@ -2078,16 +2375,32 @@ app.post('/api/translation-records', authenticateToken, async (req, res) => {
 
 // 获取用户翻译记录 API
 app.get('/api/translation-records', authenticateToken, async (req, res) => {
-    console.log("[DEBUG] GET /api/translation-records called"); // <-- 添加
-    console.log("[DEBUG] req.user (from authenticateToken):", req.user); // <-- 添加
+    console.log("[DEBUG] GET /api/translation-records called"); // 
+    console.log("[DEBUG] req.user (from authenticateToken):", req.user); // 
     
 	try {
         // 获取当前用户的所有翻译记录，并按创建时间倒序排列
-        console.log(`[DEBUG] Querying database for userId: ${req.user.userId}`); // <-- 添加
-        const records = await TranslationRecord.find({ userId: req.user.userId })
-                                                 .sort({ createdAt: -1 }); // 最新的在前
+        console.log(`[DEBUG] About to query database for userId: ${req.user.userId}`);
 
-        console.log(`[DEBUG] Found ${records.length} records for user`); // <-- 添加
+		const startTime = Date.now();
+        const records = await TranslationRecord.find({ userId: req.user.userId }).sort({ createdAt: -1 });
+        const endTime = Date.now();
+        console.log(`[DEBUG] Database query took ${endTime - startTime} ms`);
+        // --- 计时结束 ---
+        console.log(`[DEBUG] Found ${records.length} records for user`);
+        
+		// --- 添加：检查返回的记录中是否包含我们关心的那条 (简化检查) ---
+        const targetRecord = records.find(r => r._id.toString() === "68b50cdc7873ed4904d78600");
+        if (targetRecord) {
+            console.log(`[DEBUG] Target record found in query result. Score: ${targetRecord.score}`);
+        } else {
+            console.log(`[DEBUG] Target record NOT found in query result.`);
+        }
+		
+        //const records = await TranslationRecord.find({ userId: req.user.userId })
+        //                                         .sort({ createdAt: -1 }); // 最新的在前
+
+        console.log(`[DEBUG] Found ${records.length} records for user`); // 
         // 打印前几条记录作为样本检查 (可选)
         // console.log("[DEBUG] Sample records:", records.slice(0, 2));
 		
@@ -2394,14 +2707,590 @@ app.get('/api/data-export/json', authenticateToken, async (req, res) => {
         res.status(500).json({ success: false, error: '导出数据失败: ' + error.message });
     }
 });
-// ========== 数据导出 API 路由结束 ========== //
-// --- 数据导出路由结束 ---
 
 
-// 启动服务器
-app.listen(PORT, () => {
-  console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
-  console.log(`📊 API文档: http://localhost:${PORT}/api/health`);
+
+// --- 新增：获取管理员仪表板统计数据 ---
+//app.get('/api/admin/dashboard/stats', authenticateToken, requireAdmin, async (req, res) => {
+//    try {
+//        console.log(`[ADMIN] ${req.user.email} 请求仪表板统计数据`);
+//
+//        // 1. 获取总用户数
+//        const totalUsers = await User.countDocuments({});
+//
+//        // 2. 获取活跃用户数 (例如: 最近 7 天有登录或活动的用户)
+//        const oneWeekAgo = new Date();
+//        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+//        const activeUsers = await User.countDocuments({
+//            $or: [
+//                { lastLogin: { $gte: oneWeekAgo } },
+//                // 如果有其他活动字段，也可以加入，例如 updatedAt
+//                // { updatedAt: { $gte: oneWeekAgo } }
+//            ]
+//        });
+//
+//        // 3. 获取总学习记录数
+//        const totalQuizRecords = await QuizRecord.countDocuments({}); // 假设 QuizRecord 是学习记录模型
+//
+//        // 4. 获取今日新增学习记录数
+//        const startOfToday = new Date();
+//        startOfToday.setHours(0, 0, 0, 0);
+//        const endOfToday = new Date();
+//        endOfToday.setHours(23, 59, 59, 999);
+//        const todayNewQuizRecords = await QuizRecord.countDocuments({
+//            createdAt: { $gte: startOfToday, $lte: endOfToday }
+//        });
+//
+//        // 5. 获取核心词汇总数
+//        const totalCoreVocabulary = await CoreVocabulary.countDocuments({}); // 假设 CoreVocabulary 是核心词汇模型
+//
+//        // 6. 获取本周新增核心词汇数
+//        const startOfWeek = new Date();
+//        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // 获取本周日
+//        startOfWeek.setHours(0, 0, 0, 0);
+//        const weekNewCoreVocabulary = await CoreVocabulary.countDocuments({
+//            createdAt: { $gte: startOfWeek }
+//        });
+//
+//        // 7. 获取在线用户数 (这是一个复杂的问题，简单起见，可以返回一个近似值或固定值)
+//        //    通常需要会话管理或 WebSocket 连接来精确追踪。
+//        //    这里我们暂时用一个占位符或基于最近活动的用户数
+//        const onlineUsersThreshold = new Date();
+//        onlineUsersThreshold.setMinutes(onlineUsersThreshold.getMinutes() - 5); // 假设 5 分钟内有活动的算在线
+//        const onlineUsers = await User.countDocuments({
+//             lastLogin: { $gte: onlineUsersThreshold }
+//        });
+//        // 或者，如果需要更精确的在线状态，需要额外的实现逻辑
+//
+//        // 8. 获取最近 24 小时活跃用户数
+//        const past24Hours = new Date();
+//        past24Hours.setHours(past24Hours.getHours() - 24);
+//        const recentActiveUsers = await User.countDocuments({
+//            lastLogin: { $gte: past24Hours }
+//        });
+//
+//        // 9. 获取今日新增用户数
+//        const todayNewUsers = await User.countDocuments({
+//            createdAt: { $gte: startOfToday, $lte: endOfToday }
+//        });
+//
+//        // 10. 获取本周新增用户数
+//        const weekNewUsers = await User.countDocuments({
+//            createdAt: { $gte: startOfWeek }
+//        });
+//
+//        // 构造响应数据
+//        const stats = {
+//            users: {
+//                total: totalUsers,
+//                active: activeUsers,
+//                online: onlineUsers, // 注意：这个是估算值
+//                recent24h: recentActiveUsers,
+//                newToday: todayNewUsers,
+//                newThisWeek: weekNewUsers
+//            },
+//            learning: {
+//                totalRecords: totalQuizRecords,
+//                newToday: todayNewQuizRecords
+//                // 可以添加更多学习相关的统计
+//            },
+//            vocabulary: {
+//                totalCore: totalCoreVocabulary,
+//                newThisWeek: weekNewCoreVocabulary
+//                // 可以添加更多词汇相关的统计
+//            }
+//            // 可以添加更多模块的统计
+//        };
+//
+//        console.log('[ADMIN] 仪表板统计数据获取成功:', stats);
+//        res.json({
+//            success: true,
+//            stats: stats
+//        });
+//
+//    } catch (error) {
+//        console.error('[ADMIN] 获取仪表板统计数据失败:', error);
+//        res.status(500).json({
+//            success: false,
+//            error: '获取仪表板统计数据失败: ' + error.message
+//        });
+//    }
+//});
+
+app.get('/api/admin/dashboard/stats', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log(`[ADMIN] ${req.user.email} 请求仪表板统计数据`);
+
+        // 1. 获取总用户数
+        const totalUsers = await User.countDocuments({});
+
+        // 2. 获取活跃用户数 (例如: 最近 7 天有登录或活动的用户)
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const activeUsers = await User.countDocuments({
+            $or: [
+                { lastLogin: { $gte: oneWeekAgo } },
+            ]
+        });
+
+        // 3. 获取总学习记录数 (假设 QuizRecord 是学习记录模型)
+        const totalQuizRecords = await QuizRecord.countDocuments({});
+
+        // 4. 获取今日新增学习记录数
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+        const todayNewQuizRecords = await QuizRecord.countDocuments({
+            createdAt: { $gte: startOfToday, $lte: endOfToday }
+        });
+
+        // 5. 获取核心词汇总数 (假设 CoreVocabulary 是核心词汇模型)
+        const totalCoreVocabulary = await CoreVocabulary.countDocuments({});
+
+        // 6. 获取本周新增核心词汇数
+        const startOfWeek = new Date();
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // 获取本周日
+        startOfWeek.setHours(0, 0, 0, 0);
+        const weekNewCoreVocabulary = await CoreVocabulary.countDocuments({
+            createdAt: { $gte: startOfWeek }
+        });
+
+        // 7. 获取在线用户数 (估算)
+        const onlineUsersThreshold = new Date();
+        onlineUsersThreshold.setMinutes(onlineUsersThreshold.getMinutes() - 5); // 5分钟内算在线
+        const onlineUsers = await User.countDocuments({
+             lastLogin: { $gte: onlineUsersThreshold }
+        });
+
+        // 8. 获取最近 24 小时活跃用户数
+        const past24Hours = new Date();
+        past24Hours.setHours(past24Hours.getHours() - 24);
+        const recentActiveUsers = await User.countDocuments({
+            lastLogin: { $gte: past24Hours }
+        });
+
+        // 9. 获取今日新增用户数
+        const todayNewUsers = await User.countDocuments({
+            createdAt: { $gte: startOfToday, $lte: endOfToday }
+        });
+
+        // 10. 获取本周新增用户数
+        const weekNewUsers = await User.countDocuments({
+            createdAt: { $gte: startOfWeek }
+        });
+
+        // --- 新增：获取最近一周注册的用户列表 ---
+        const oneWeekAgoForUsers = new Date();
+        oneWeekAgoForUsers.setDate(oneWeekAgoForUsers.getDate() - 7);
+        // 查询最近一周注册的用户，并只选择需要的字段，按注册时间倒序排列
+        const recentUsers = await User.find({
+            createdAt: { $gte: oneWeekAgoForUsers }
+        })
+        .select('name email createdAt lastLogin') // 选择需要的字段
+        .sort({ createdAt: -1 }) // 按注册时间倒序
+        .limit(10); // 限制返回数量，例如最近10个
+        // --- 新增结束 ---
+
+        // 构造响应数据
+        const stats = {
+            users: {
+                total: totalUsers,
+                active: activeUsers,
+                online: onlineUsers,
+                recent24h: recentActiveUsers,
+                newToday: todayNewUsers,
+                newThisWeek: weekNewUsers
+            },
+            learning: {
+                totalRecords: totalQuizRecords,
+                newToday: todayNewQuizRecords
+            },
+            vocabulary: {
+                totalCore: totalCoreVocabulary,
+                newThisWeek: weekNewCoreVocabulary
+            }
+            // 可以添加更多模块的统计
+        };
+
+        console.log('[ADMIN] 仪表板统计数据获取成功:', stats);
+        // --- 修改：在响应中包含 recentUsers ---
+        res.json({
+            success: true,
+            stats: stats,
+            recentUsers: recentUsers // 添加最近用户列表到响应中
+        });
+        // --- 修改结束 ---
+    } catch (error) {
+        console.error('[ADMIN] 获取仪表板统计数据失败:', error);
+        res.status(500).json({
+            success: false,
+            error: '获取仪表板统计数据失败: ' + error.message
+        });
+    }
 });
 
-module.exports = app;
+//// --- 获取用户列表 (管理员) ---
+//// @desc    获取所有用户 (支持分页、搜索、排序)
+//// @route   GET /api/admin/users
+//// @access  Private/Admin
+//app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+//    try {
+//        console.log(`[ADMIN] ${req.user.email} 请求用户列表`);
+//
+//        // 从查询参数获取分页、搜索和排序信息
+//        const page = parseInt(req.query.page) || 1;
+//        const limit = parseInt(req.query.limit) || 10;
+//        const search = req.query.search || '';
+//        const statusFilter = req.query.status || ''; // 'active' or 'inactive'
+//        const sortOption = req.query.sort || 'createdAt_desc'; // e.g., 'name_asc', 'lastLogin_desc'
+//
+//        let query = {};
+//        // 应用搜索过滤器 (搜索姓名或邮箱)
+//        if (search) {
+//            query.$or = [
+//                { name: { $regex: search, $options: 'i' } },
+//                { email: { $regex: search, $options: 'i' } }
+//            ];
+//        }
+//        // 应用状态过滤器 (简化示例：7天内登录算活跃)
+//        if (statusFilter === 'active') {
+//            const oneWeekAgo = new Date();
+//            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+//            query.lastLogin = { $gte: oneWeekAgo };
+//        } else if (statusFilter === 'inactive') {
+//            // 查找从未登录过或很久没登录的用户
+//            const oneWeekAgo = new Date();
+//            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+//            query.$or = [
+//                { lastLogin: { $exists: false } },
+//                { lastLogin: { $lt: oneWeekAgo } }
+//            ];
+//        }
+//
+//        // 构建排序对象
+//        let sortObj = {};
+//        if (sortOption === 'name_asc') {
+//            sortObj.name = 1;
+//        } else if (sortOption === 'name_desc') {
+//            sortObj.name = -1;
+//        } else if (sortOption === 'lastLogin_desc') {
+//            sortObj.lastLogin = -1;
+//        } else if (sortOption === 'lastLogin_asc') {
+//            sortObj.lastLogin = 1;
+//        } else if (sortOption === 'createdAt_asc') {
+//            sortObj.createdAt = 1;
+//        } else { // Default: createdAt_desc
+//            sortObj.createdAt = -1;
+//        }
+//
+//        const skip = (page - 1) * limit;
+//
+//        // 查询数据库
+//        const users = await User.find(query)
+//            .sort(sortObj)
+//            .skip(skip)
+//            .limit(limit)
+//            .select('-password'); // 不返回密码字段
+//
+//        const total = await User.countDocuments(query);
+//
+//        console.log(`[ADMIN] 成功获取 ${users.length} 个用户 (第 ${page} 页)`);
+//        res.json({
+//            success: true,
+//            users: users,
+//            pagination: {
+//                currentPage: page,
+//                totalPages: Math.ceil(total / limit),
+//                totalItems: total,
+//                itemsPerPage: limit
+//            }
+//        });
+//
+//    } catch (error) {
+//        console.error('[ADMIN] 获取用户列表失败:', error);
+//        res.status(500).json({
+//            success: false,
+//            error: '获取用户列表失败: ' + error.message
+//        });
+//    }
+//});
+
+
+
+// --- 创建新用户 (管理员) ---
+// @desc    创建新用户
+// @route   POST /api/admin/users
+// @access  Private/Admin
+app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log(`[ADMIN] ${req.user.email} 请求创建新用户`);
+
+        const { name, email, password, phone, bio } = req.body; // 从请求体获取数据
+
+        // 验证输入
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, error: '姓名、邮箱和密码不能为空。' });
+        }
+
+        // 验证邮箱格式
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ success: false, error: '请输入有效的邮箱地址。' });
+        }
+
+        // 验证密码长度
+        if (password.length < 6) {
+            return res.status(400).json({ success: false, error: '密码长度至少需要6位。' });
+        }
+
+        // 检查邮箱是否已存在
+        const existingUser = await User.findOne({ email: email });
+        if (existingUser) {
+            return res.status(409).json({ success: false, error: '该邮箱已被注册。' });
+        }
+
+        // 加密密码
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // 创建新用户
+        const newUser = new User({
+            name: name,
+            email: email,
+            password: hashedPassword,
+            phone: phone || undefined, // 如果 phone 是可选字段
+            bio: bio || undefined,     // 如果 bio 是可选字段
+            // 其他字段...
+        });
+
+        // 保存到数据库
+        const savedUser = await newUser.save();
+
+        console.log(`[ADMIN] 新用户 ID ${savedUser._id} 创建成功`);
+        res.json({
+            success: true,
+            message: '用户创建成功',
+            user: {
+                _id: savedUser._id,
+                name: savedUser.name,
+                email: savedUser.email,
+                // 返回不需要敏感信息的用户对象
+            }
+        });
+
+    } catch (error) {
+        console.error(`[ADMIN] 创建用户失败:`, error);
+        // 处理 Mongoose 验证错误
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({ success: false, error: messages.join(', ') });
+        }
+        // 处理其他错误
+        res.status(500).json({ success: false, error: '创建用户失败: ' + error.message });
+    }
+});
+
+
+
+// --- 获取用户列表 (管理员) ---
+// @desc    获取所有用户 (支持分页)
+// @route   GET /api/admin/users
+// @access  Private/Admin
+app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log(`[ADMIN] ${req.user.email} 请求用户列表`);
+
+        // 从查询参数获取分页信息
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // 查询数据库
+        const users = await User.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        const total = await User.countDocuments({});
+
+        console.log(`[ADMIN] 成功获取 ${users.length} 个用户 (第 ${page} 页)`);
+        res.json({
+            success: true,
+            users: users,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalItems: total,
+                itemsPerPage: limit
+            }
+        });
+
+    } catch (error) {
+        console.error('[ADMIN] 获取用户列表失败:', error);
+        res.status(500).json({ success: false, error: '获取用户列表失败: ' + error.message });
+    }
+});
+
+// ========== 数据导出 API 路由结束 ========== //
+
+
+
+// ======== AI翻译路由 ===========//
+// --- 新增：配置 DeepSeek API (在文件顶部，与 MongoDB URI 等配置放在一起) ---
+// 注意：不要将真实的密钥硬编码在代码中，应使用环境变量
+// const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY; // 推荐方式
+// const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
+// 如果暂时用硬编码，请务必做好保密，并在生产环境改为环境变量
+//const DEEPSEEK_API_KEY = 'YOUR_ACTUAL_DEEPSEEK_API_KEY_HERE'; // <-- 替换为你的实际 Key
+//const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+// --- AI 翻译路由 ---
+// @route   POST /api/translate
+// @access  Private
+app.post('/api/translate', authenticateToken, async (req, res) => { // 假设你有 authenticateToken 中间件
+    try {
+        console.log(`[API] 用户 ${req.user?.email || req.user?.userId} 请求翻译`);
+        const { text } = req.body;
+
+        // 1. 验证输入
+        if (!text || typeof text !== 'string') {
+            return res.status(400).json({ success: false, error: '请求体必须包含一个字符串类型的 "text" 字段。' });
+        }
+
+        // 2. 检查后端是否配置了 API Key
+        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'YOUR_ACTUAL_DEEPSEEK_API_KEY_HERE') {
+            console.error('[API] DeepSeek API Key 未在后端配置。');
+            //return res.status(500).json({ success: false, error: '翻译服务配置错误。' });
+			// --- 回退到后端模拟 (开发/测试用) ---
+			console.warn('[API] 回退到后端模拟翻译。');
+			await new Promise(resolve => setTimeout(resolve, 500));
+			const mockTranslations = { /* ... */ };
+			const mockResult = mockTranslations[text] || `(后端模拟) ${text}`;
+			return res.json({ success: true, translation: mockResult });
+			// --- 回退结束 ---
+        }
+
+        // 3. 构造请求载荷 (Payload)
+        const payload = {
+            model: "deepseek-chat", // 或根据需要选择
+            messages: [
+                { role: "user", content: `Translate the following English sentence into Chinese: "${text}"` }
+            ],
+            // 可以添加 temperature, max_tokens 等参数
+        };
+
+        console.log(`[API] 正在向 DeepSeek API 发送请求...`);
+        // 4. 调用 DeepSeek API
+        const deepSeekResponse = await fetch(DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`, // <-- 后端使用安全存储的 Key
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!deepSeekResponse.ok) {
+            let errorMsg = `DeepSeek API HTTP Error ${deepSeekResponse.status}: ${deepSeekResponse.statusText}`;
+            try {
+                const errorData = await deepSeekResponse.json();
+                errorMsg = errorData.error?.message || errorMsg;
+            } catch (e) {
+                // 尝试读取文本错误信息
+                try {
+                    const errorText = await deepSeekResponse.text();
+                    errorMsg += ` (Response Text: ${errorText.substring(0, 200)}...)`;
+                } catch (textErr) {
+                    // 读取文本也失败
+                }
+            }
+            console.error(`[API] DeepSeek API 调用失败:`, errorMsg);
+            // 可以返回更具体的错误给前端，或者统一返回 500
+            return res.status(500).json({ success: false, error: `翻译服务暂时不可用。` });
+        }
+
+        const deepSeekData = await deepSeekResponse.json();
+        console.log(`[API] 收到 DeepSeek API 响应:`, JSON.stringify(deepSeekData, null, 2));
+
+        // 5. 解析并返回翻译结果
+        let translatedText = deepSeekData.choices?.[0]?.message?.content?.trim();
+        if (translatedText) {
+            // 清理可能的 Markdown 代码块
+            translatedText = translatedText.replace(/^`+|`+$/g, '');
+            console.log(`[API] 翻译成功: "${text}" -> "${translatedText}"`);
+            return res.json({ success: true, translation: translatedText });
+        } else {
+            console.error('[API] DeepSeek API 响应中未找到翻译结果:', deepSeekData);
+            return res.status(500).json({ success: false, error: '翻译服务返回了无效的响应格式。' });
+        }
+
+    } catch (error) {
+        console.error('[API] 处理翻译请求时发生内部错误:', error);
+        res.status(500).json({ success: false, error: '服务器内部错误' });
+    }
+});
+
+
+
+// ======== AI翻译路由结束 ===========//
+
+
+
+// 12. 定义兜底路由和错误处理 (可选但推荐)
+// 404 处理
+app.use('*', (req, res) => {
+    res.status(404).json({ success: false, error: 'API route not found' });
+});
+
+// 全局错误处理中间件
+app.use((err, req, res, next) => {
+    console.error('Unhandled server error:', err);
+    // 如果 headers 已经 sent，则交给 Express default error handler
+    if (res.headersSent) {
+        return next(err);
+    }
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+});
+
+
+
+// 在健康检查路由之后，兜底路由之前添加
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+});
+
+// 13. 导出 Netlify Function handler
+// 注意：对于 Netlify Functions，通常只需要导出 handler
+// 如果你同时想支持本地 `node server.js` 运行，则需要下面的启动逻辑
+const serverlessHandler = serverless(app);
+
+// 关键：导出 Netlify 需要的 handler
+exports.handler = serverlessHandler;
+
+// 14. 可选：支持本地运行 (例如使用 `node server.js`)
+// 这部分代码只有在直接运行此文件时才会执行，不会影响 Netlify Functions
+if (require.main === module) {
+    //const PORT = process.env.PORT || 3000; // 你原来的端口
+    app.listen(PORT, () => {
+      console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
+      console.log(`📊 API文档: http://localhost:${PORT}/api/health`);
+    });
+}
+
+// --- 删除或注释掉这行 ---
+// module.exports = app; // 这行可能会干扰 Netlify 的 handler 查找
+
+
+
+// // 15. 如果只用于 Netlify Functions，则最后导出 app 是不需要的
+// // module.exports = app; // 注释掉或删除
+// 
+// router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+//     try {
+//         const users = await User.find({});
+//         res.json({ success: true, users }); // 返回标准格式
+//     } catch (error) {
+//         console.error('获取用户列表失败:', error);
+//         res.status(500).json({ success: false, error: '服务器内部错误' });
+//     }
+// });
+// 
+// module.exports = router;
+
