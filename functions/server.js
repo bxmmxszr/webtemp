@@ -1,6 +1,13 @@
 // server.js
 // 1. 加载环境变量
-require('dotenv').config();
+//require('dotenv').config();
+try {
+  require('dotenv').config();
+  console.log('✅ Loaded environment variables from .env file (if present)');
+} catch (err) {
+  console.log('ℹ️  dotenv not found or not needed, relying on Netlify environment variables');
+  // 在 Netlify 上，环境变量会自动通过 process.env 注入
+}
 
 // 2. 函数声明
 const express = require('express');
