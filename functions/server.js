@@ -1,23 +1,23 @@
 // functions/server.js
 
 // 1. 尝试加载 dotenv（主要用于本地开发）
-try {
-  require('dotenv').config();
-  console.log('✅ [Local Dev] Loaded environment variables from .env file');
-} catch (dotenvErr) {
-  console.log('ℹ️  [Netlify/Production] [FORCE_UPDATE_20231027] dotenv not loaded or not found. Checking for Netlify environment variables...');
-  // 如果 dotenv 包不存在或加载失败，检查关键环境变量是否已通过 Netlify 注入
-  console.log('ℹ️  [Netlify/Production] dotenv not loaded or not found. Checking for Netlify environment variables...');
-  
-  // 检查关键的环境变量是否存在（你可以根据实际情况调整这个检查）
-  if (process.env.MONGODB_URI && process.env.JWT_SECRET) {
-    console.log('✅ [Netlify/Production] Required environment variables found via process.env');
-  } else {
-    console.warn('⚠️  [Netlify/Production] Some environment variables might be missing!');
-    // 你可以选择在这里抛出错误，或者让函数继续运行（取决于你的容错策略）
-    // throw new Error('Missing critical environment variables (MONGODB_URI, JWT_SECRET) on Netlify');
-  }
-}
+//try {
+//  require('dotenv').config();
+//  console.log('✅ [Local Dev] Loaded environment variables from .env file');
+//} catch (dotenvErr) {
+//  console.log('ℹ️  [Netlify/Production] [FORCE_UPDATE_20231027] dotenv not loaded or not found. Checking for Netlify environment variables...');
+//  // 如果 dotenv 包不存在或加载失败，检查关键环境变量是否已通过 Netlify 注入
+//  console.log('ℹ️  [Netlify/Production] dotenv not loaded or not found. Checking for Netlify environment variables...');
+//  
+//  // 检查关键的环境变量是否存在（你可以根据实际情况调整这个检查）
+//  if (process.env.MONGODB_URI && process.env.JWT_SECRET) {
+//    console.log('✅ [Netlify/Production] Required environment variables found via process.env');
+//  } else {
+//    console.warn('⚠️  [Netlify/Production] Some environment variables might be missing!');
+//    // 你可以选择在这里抛出错误，或者让函数继续运行（取决于你的容错策略）
+//    // throw new Error('Missing critical environment variables (MONGODB_URI, JWT_SECRET) on Netlify');
+//  }
+//}
 
 // 2. 函数声明
 const express = require('express');
